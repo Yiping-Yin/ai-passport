@@ -20,7 +20,7 @@ AI Knowledge Passport is organized as a local-first pipeline:
 | `app/storage` | SQLite schema, migrations, repository interfaces, seed loading | `app/domain` |
 | `app/ingest` | Source import, raw file preservation, privacy defaults, metadata capture | `app/domain`, `app/storage` |
 | `app/ingest.inbox` | Inbox projection, compile-job state, source/evidence preview, and retry actions | `app/ingest`, `app/storage`, `app/domain` |
-| `app/compile` | Knowledge-node derivation, evidence extraction, compile jobs, revisions | `app/domain`, `app/storage`, `app/ingest` |
+| `app/compile` | Knowledge-node derivation, evidence extraction, source-jump contracts, compile jobs, revisions, and manual edit overlays | `app/domain`, `app/storage`, `app/ingest` |
 | `app/passport` | Postcards, Passport manifests, readiness signals | `app/domain`, `app/storage`, `app/compile` |
 | `app/gateway` | Passport-first reads, visa bundles, mount sessions, access enforcement | `app/domain`, `app/storage`, `app/passport` |
 | `app/review` | Review candidates, diffs, audit log events, export/restore controls | `app/domain`, `app/storage`, `app/gateway`, `app/passport` |
@@ -41,5 +41,6 @@ AI Knowledge Passport is organized as a local-first pipeline:
 - Keep migration and seed conventions under `app/storage/` so Milestone 1.3 lands without reshaping the repo.
 - Persist array-like fields as JSON text at the SQLite layer while the domain stays tuple-based in Python.
 - Keep compile job queueing and inbox projection in `app/ingest` until the real compiler pipeline exists in `app/compile`.
+- Keep generated node snapshots and user overrides separate so generated provenance is never overwritten by manual edits.
 - Treat `scripts/dev.py` as the repo-contract entrypoint for lint, typecheck, test, migrate, and CI orchestration.
 - Delay UI, MCP behavior, and provider-specific integrations until the lower layers exist.

@@ -1,16 +1,16 @@
 # PLANS.md
 
-Current milestone: Milestone 3.1 — Knowledge node generation.
+Current milestone: Milestone 4.1 — Capability signal generation.
 
 Active scope:
 
-- Build the first node-generation pipeline from imported sources
-- Emit topic, project, method, and question nodes
-- Keep generated output evidence-backed and version-ready
-- Leave evidence extraction depth and manual edit flows to later milestones
+- Define the capability signal contract
+- Generate initial evidence-backed capability signals from compiled nodes
+- Keep signals descriptive and non-numeric
+- Surface serialization-ready signal output without scoring the user
 
 Out of scope until the next milestone:
 
-- Evidence extraction/linkage depth from Milestone 3.2
-- Manual compile diff and edit flows from Milestone 3.3
+- Mistake pattern generation and controls
+- Focus Card prioritization changes
 - Writeback automation

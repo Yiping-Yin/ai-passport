@@ -20,6 +20,9 @@ class StorageTests(unittest.TestCase):
                 [
                     "202604061600__initial_schema.sql",
                     "202604061730__compile_jobs.sql",
+                    "202604062000__knowledge_node_revisions.sql",
+                    "202604062030__node_evidence_links.sql",
+                    "202604062100__knowledge_node_field_overrides.sql",
                 ],
             )
 
@@ -37,10 +40,19 @@ class StorageTests(unittest.TestCase):
                 connection.close()
 
             rolled_back = migrate_down(db_path)
-            self.assertEqual(rolled_back, "202604061730__compile_jobs.sql")
+            self.assertEqual(rolled_back, "202604062100__knowledge_node_field_overrides.sql")
 
             rolled_back_again = migrate_down(db_path)
-            self.assertEqual(rolled_back_again, "202604061600__initial_schema.sql")
+            self.assertEqual(rolled_back_again, "202604062030__node_evidence_links.sql")
+
+            rolled_back_third = migrate_down(db_path)
+            self.assertEqual(rolled_back_third, "202604062000__knowledge_node_revisions.sql")
+
+            rolled_back_fourth = migrate_down(db_path)
+            self.assertEqual(rolled_back_fourth, "202604061730__compile_jobs.sql")
+
+            rolled_back_fifth = migrate_down(db_path)
+            self.assertEqual(rolled_back_fifth, "202604061600__initial_schema.sql")
 
             connection = sqlite3.connect(db_path)
             try:
@@ -52,6 +64,9 @@ class StorageTests(unittest.TestCase):
                 }
                 self.assertNotIn("workspaces", table_names)
                 self.assertNotIn("compile_jobs", table_names)
+                self.assertNotIn("knowledge_node_revisions", table_names)
+                self.assertNotIn("node_evidence_links", table_names)
+                self.assertNotIn("knowledge_node_field_overrides", table_names)
                 self.assertIn("schema_migrations", table_names)
             finally:
                 connection.close()

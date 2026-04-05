@@ -14,6 +14,7 @@ JSON_COLUMNS = {
     "workspaces": {"tags"},
     "sources": {"tags"},
     "knowledge_nodes": {"source_ids", "related_node_ids"},
+    "knowledge_node_revisions": {"source_ids", "related_node_ids"},
     "capability_signals": {"evidence_ids", "current_gaps"},
     "mistake_patterns": {"examples", "fix_suggestions"},
     "focus_cards": {"success_criteria", "related_topics"},
@@ -43,6 +44,17 @@ def encode_record(table: str, record: dict[str, Any]) -> dict[str, Any]:
         else:
             encoded[key] = value
     return encoded
+
+
+def decode_record(table: str, record: dict[str, Any]) -> dict[str, Any]:
+    json_columns = JSON_COLUMNS.get(table, set())
+    decoded: dict[str, Any] = {}
+    for key, value in record.items():
+        if key in json_columns and isinstance(value, str):
+            decoded[key] = json.loads(value)
+        else:
+            decoded[key] = value
+    return decoded
 
 
 def insert_record(connection: sqlite3.Connection, table: str, record: dict[str, Any]) -> None:

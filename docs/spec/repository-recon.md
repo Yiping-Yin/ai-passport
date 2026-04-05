@@ -50,6 +50,7 @@ Last verified: 2026-04-06
 - The repo is still in bootstrap mode: no third-party Python dependencies and no runtime API surface beyond repo, storage, and GitHub bootstrap tooling.
 - The repo uses SQLite JSON text columns for tuple/list fields in the bootstrap schema.
 - Inbox compile jobs are intentionally queue-only scaffolding; the real compiler lands in Epic 3.
+- The compiler now supports section-based node generation, node revisions, evidence links, source-jump lookups, and manual field overrides.
 - `scripts/seed_github.py` is the heaviest live script and should remain stable while Milestone 1.2 introduces domain modules.
 - The GitHub Project seed now requires `gh` auth with `project` scope.
 - Module boundaries are frozen in [architecture-baseline.md](/Users/yinyiping/Desktop/AI passport/docs/spec/architecture-baseline.md) and policy is frozen in [development-policy.md](/Users/yinyiping/Desktop/AI passport/docs/spec/development-policy.md).

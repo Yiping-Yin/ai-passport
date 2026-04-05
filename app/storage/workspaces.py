@@ -7,11 +7,11 @@ from datetime import datetime
 
 from app.domain import PassportReadiness, PrivacyLevel, Workspace, WorkspaceType
 from app.domain.serialization import deserialize_entity
-from app.storage.sqlite import encode_record
+from app.storage.sqlite import decode_record, encode_record
 
 
 def _row_to_payload(row: sqlite3.Row) -> dict[str, object]:
-    return {key: row[key] for key in row.keys()}
+    return decode_record("workspaces", {key: row[key] for key in row.keys()})
 
 
 class WorkspaceRepository:

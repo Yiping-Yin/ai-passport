@@ -16,7 +16,9 @@ Last updated: 2026-04-06
 | `workspaces` | Workspace root records | Referenced by `sources`, `knowledge_nodes`, `capability_signals`, `mistake_patterns`, `focus_cards`, `postcards`, `passports`, `visa_bundles` |
 | `sources` | Raw imported artifacts | `workspace_id -> workspaces.id` |
 | `knowledge_nodes` | Structured topic/project/method/question nodes | `workspace_id -> workspaces.id` |
+| `knowledge_node_revisions` | Version history for generated node snapshots | `node_id -> knowledge_nodes.id`, `workspace_id -> workspaces.id` |
 | `evidence_fragments` | Traceable source excerpts | `source_id -> sources.id` |
+| `node_evidence_links` | Join table from generated nodes to evidence fragments | `node_id -> knowledge_nodes.id`, `evidence_fragment_id -> evidence_fragments.id` |
 | `capability_signals` | Evidence-backed observations | `workspace_id -> workspaces.id` |
 | `mistake_patterns` | Recurring error patterns | `workspace_id -> workspaces.id` |
 | `focus_cards` | Active user goals | `workspace_id -> workspaces.id` |
@@ -26,6 +28,7 @@ Last updated: 2026-04-06
 | `mount_sessions` | External AI session trail | `visa_id -> visa_bundles.id` |
 | `review_candidates` | AI writeback candidates | `session_id -> mount_sessions.id` |
 | `compile_jobs` | Inbox compile attempts and retry history | `source_id -> sources.id`, `workspace_id -> workspaces.id` |
+| `knowledge_node_field_overrides` | User edits and merge overrides for generated node fields | `node_id -> knowledge_nodes.id` |
 | `audit_logs` | Append-only governance trail | Polymorphic `object_id` reference |
 | `schema_migrations` | Applied migration history | Managed by the migration runner |
 
@@ -36,6 +39,8 @@ Last updated: 2026-04-06
 - Foreign keys are used where the relation is concrete and non-polymorphic.
 - `review_candidates.target_object` and `audit_logs.object_id` remain polymorphic references and are kept as text identifiers.
 - `compile_jobs` stores the latest inbox state using `queued`, `running`, `succeeded`, and `failed`; inbox projection maps missing jobs to `not_started`.
+- `knowledge_node_revisions` stores full generated snapshots per version for diffing and traceability.
+- `knowledge_node_field_overrides` stores manual edits as JSON payloads so generated state and user-edited state remain distinguishable.
 
 ## Seed Baseline
 

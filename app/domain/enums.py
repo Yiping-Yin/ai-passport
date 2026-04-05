@@ -98,3 +98,14 @@ class CompileJobStatus(StrEnum):
     RUNNING = "running"
     SUCCEEDED = "succeeded"
     FAILED = "failed"
+
+
+class FieldProvenance(StrEnum):
+    GENERATED = "generated"
+    HUMAN_EDITED = "human_edited"
+    MIXED = "mixed"
+
+
+class OverrideMode(StrEnum):
+    REPLACE = "replace"
+    MERGE = "merge"

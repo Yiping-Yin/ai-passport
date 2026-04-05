@@ -28,9 +28,11 @@ The following records are versioned and must serialize with `version >= 1`:
 - `VisaBundle.permission_levels` is serialized as a list of stable permission strings: `passport_read`, `topic_read`, `writeback_candidate`.
 - `AccessMode` is serialized as either `read_only` or `candidate_writeback`.
 - `WritebackPolicy` is serialized as `review_required`; there is intentionally no auto-merge value.
+- Reviewability metadata uses `FieldProvenance` values `generated`, `human_edited`, and `mixed`, plus override modes `replace` and `merge`.
 
 ## Invariant Notes
 
 - Read-only-first is encoded through `VisaBundle.access_mode`, `permission_levels`, and `writeback_policy`.
 - Whitelist-only access is encoded through explicit `included_postcards` and `included_nodes`; wildcard values are invalid.
 - Mount sessions and review candidates remain separate records so writeback is always traceable to a concrete session.
+- Generated nodes remain distinct from manual overrides so the system can show both effective content and generated revision diffs.

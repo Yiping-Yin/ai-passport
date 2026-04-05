@@ -7,11 +7,11 @@ from datetime import datetime
 
 from app.domain import PrivacyLevel, Source, SourceType
 from app.domain.serialization import deserialize_entity
-from app.storage.sqlite import encode_record
+from app.storage.sqlite import decode_record, encode_record
 
 
 def _row_to_payload(row: sqlite3.Row) -> dict[str, object]:
-    return {key: row[key] for key in row.keys()}
+    return decode_record("sources", {key: row[key] for key in row.keys()})
 
 
 class SourceRepository:

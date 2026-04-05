@@ -32,6 +32,8 @@ This repo follows the implementation guide's local-first defaults:
 - `app/api/workspaces.py`: workspace CRUD, active-workspace state, and readiness placeholder service
 - `app/ingest/service.py`: source intake and raw-source preservation
 - `app/ingest/inbox.py`: inbox projection, compile jobs, preview, and recompile behavior
+- `app/compile/service.py`: node generation, revisions, evidence links, and source-jump lookup
+- `app/compile/review.py`: manual edit overlays, provenance, and compile diffs
 
 ## Local Commands
 
