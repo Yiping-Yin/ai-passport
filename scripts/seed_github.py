@@ -8,6 +8,7 @@ import json
 import re
 import subprocess
 import sys
+import time
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
@@ -46,6 +47,31 @@ LABEL_SPECS = {
     "area:pilot-readiness": {"color": "0e8a16", "description": "Thin UI, quality gates, and pilot readiness."},
     "blocked": {"color": "000000", "description": "Blocked by dependency, scope, or external state."},
 }
+STATUS_OPTION_SPECS = [
+    {"name": "Backlog", "color": "GRAY", "description": "Default queued state for imported work."},
+    {"name": "Ready", "color": "BLUE", "description": "Ready to start in the active milestone."},
+    {"name": "In Progress", "color": "YELLOW", "description": "Implementation is in progress."},
+    {"name": "In Review", "color": "PURPLE", "description": "Waiting for review or validation."},
+    {"name": "Done", "color": "GREEN", "description": "Completed and verified."},
+    {"name": "Blocked", "color": "RED", "description": "Blocked by dependency or external state."},
+]
+PROJECT_VIEW_SPECS = [
+    {
+        "name": "Current Milestone",
+        "layout": "table",
+        "filter": 'is:issue is:open milestone:"Milestone 1.1 — Repository reconnaissance and architecture baseline"',
+    },
+    {
+        "name": "By Epic",
+        "layout": "table",
+        "filter": "is:issue label:type:epic",
+    },
+    {
+        "name": "Blocked",
+        "layout": "table",
+        "filter": 'status:"Blocked" OR label:blocked',
+    },
+]
 
 
 def run(cmd: list[str], *, capture: bool = True, check: bool = True) -> subprocess.CompletedProcess[str]:
@@ -89,9 +115,37 @@ def gh_api(path: str, *, method: str = "GET", fields: dict[str, Any] | None = No
             else:
                 value = str(value)
             cmd.extend(["-f", f"{key}={value}"])
-    result = run(cmd, check=check)
+    result = retry_run(cmd, check=check)
     output = result.stdout.strip()
     return json.loads(output) if output else None
+
+
+def gh_graphql(query: str, *, raw_fields: dict[str, Any] | None = None, typed_fields: list[tuple[str, Any]] | None = None, check: bool = True) -> Any:
+    cmd = ["gh", "api", "graphql", "-f", f"query={query}"]
+    if raw_fields:
+        for key, value in raw_fields.items():
+            cmd.extend(["-f", f"{key}={value}"])
+    if typed_fields:
+        for key, value in typed_fields:
+            cmd.extend(["-F", f"{key}={value}"])
+    result = retry_run(cmd, check=check)
+    output = result.stdout.strip()
+    return json.loads(output) if output else None
+
+
+def retry_run(cmd: list[str], *, check: bool = True, attempts: int = 3, delay_seconds: float = 1.0) -> subprocess.CompletedProcess[str]:
+    last_error: subprocess.CalledProcessError | None = None
+    for attempt in range(1, attempts + 1):
+        try:
+            return run(cmd, check=check)
+        except subprocess.CalledProcessError as error:
+            last_error = error
+            if attempt == attempts:
+                raise
+            time.sleep(delay_seconds * attempt)
+    if last_error:
+        raise last_error
+    raise RuntimeError("retry_run exhausted without returning or raising the last error")
 
 
 def load_json(path: Path, default: Any) -> Any:
@@ -409,6 +463,105 @@ def can_manage_projects(owner: str) -> tuple[bool, str | None]:
     return False, message
 
 
+def ensure_project_status_field(owner: str, project_number: int, state: dict[str, Any]) -> tuple[str, str]:
+    fields = gh_json(["project", "field-list", str(project_number), "--owner", owner, "--format", "json"]) or {"fields": []}
+    status_field = next((item for item in fields["fields"] if item["name"] == "Status"), None)
+    if not status_field:
+        status_field = gh_json(
+            [
+                "project",
+                "field-create",
+                str(project_number),
+                "--owner",
+                owner,
+                "--name",
+                "Status",
+                "--data-type",
+                "SINGLE_SELECT",
+                "--single-select-options",
+                ",".join(option["name"] for option in STATUS_OPTION_SPECS),
+                "--format",
+                "json",
+            ]
+        )
+
+    mutation = (
+        "mutation($fieldId:ID!,$name:String!,$options:[ProjectV2SingleSelectFieldOptionInput!]) "
+        "{ updateProjectV2Field(input:{fieldId:$fieldId,name:$name,singleSelectOptions:$options}) "
+        "{ projectV2Field { ... on ProjectV2SingleSelectField { id name options { id name color description } } } } }"
+    )
+    typed_fields: list[tuple[str, Any]] = [("fieldId", status_field["id"]), ("name", "Status")]
+    for option in STATUS_OPTION_SPECS:
+        for key in ("name", "color", "description"):
+            typed_fields.append((f"options[][{key}]", option[key]))
+    payload = gh_graphql(mutation, typed_fields=typed_fields)
+    updated_field = payload["data"]["updateProjectV2Field"]["projectV2Field"]
+    backlog_option = next(option for option in updated_field["options"] if option["name"] == "Backlog")
+    state["project"]["status_field"] = {
+        "id": updated_field["id"],
+        "options": {option["name"]: option["id"] for option in updated_field["options"]},
+    }
+    return updated_field["id"], backlog_option["id"]
+
+
+def ensure_project_item_statuses(owner: str, project_number: int, project_id: str, field_id: str, backlog_option_id: str) -> int:
+    items_payload = gh_json(["project", "item-list", str(project_number), "--owner", owner, "--format", "json", "-L", "200"]) or {"items": []}
+    mutation = (
+        "mutation($projectId:ID!,$itemId:ID!,$fieldId:ID!,$optionId:String!) "
+        "{ updateProjectV2ItemFieldValue(input:{projectId:$projectId,itemId:$itemId,fieldId:$fieldId,"
+        "value:{singleSelectOptionId:$optionId}}){ projectV2Item { id } } }"
+    )
+    updated = 0
+    for item in items_payload["items"]:
+        if item.get("status") == "Backlog":
+            continue
+        gh_graphql(
+            mutation,
+            typed_fields=[
+                ("projectId", project_id),
+                ("itemId", item["id"]),
+                ("fieldId", field_id),
+                ("optionId", backlog_option_id),
+            ],
+        )
+        updated += 1
+    return len(items_payload["items"])
+
+
+def get_project_views(project_id: str) -> dict[str, Any]:
+    query = (
+        f'query {{ node(id:"{project_id}") {{ ... on ProjectV2 '
+        "{ views(first:20) { nodes { id number name layout filter } } } } }"
+    )
+    payload = gh_graphql(query)
+    views = payload["data"]["node"]["views"]["nodes"]
+    return {view["name"]: view for view in views}
+
+
+def ensure_project_views(owner: str, project_number: int, project_id: str, state: dict[str, Any]) -> None:
+    existing_views = get_project_views(project_id)
+    created_or_existing: dict[str, Any] = {}
+    for spec in PROJECT_VIEW_SPECS:
+        view = existing_views.get(spec["name"])
+        if not view:
+            view = gh_api(
+                f"users/{owner}/projectsV2/{project_number}/views",
+                method="POST",
+                fields={
+                    "name": spec["name"],
+                    "layout": spec["layout"],
+                    "filter": spec["filter"],
+                },
+            )
+        created_or_existing[spec["name"]] = {
+            "number": view["number"],
+            "url": view.get("html_url") or f"https://github.com/users/{owner}/projects/{project_number}/views/{view['number']}",
+            "layout": view["layout"],
+            "filter": view.get("filter"),
+        }
+    state["project"]["views"] = created_or_existing
+
+
 def ensure_project(repo: str, state: dict[str, Any], owner: str, all_issue_numbers: list[int]) -> None:
     ok, reason = can_manage_projects(owner)
     if not ok:
@@ -440,33 +593,12 @@ def ensure_project(repo: str, state: dict[str, Any], owner: str, all_issue_numbe
         "title": project["title"],
         "id": project.get("id"),
         "url": project.get("url"),
-        "views": ["Current Milestone", "By Epic", "Blocked"],
+        "views": {},
     }
 
     run(["gh", "project", "link", str(project_number), "--owner", owner, "--repo", repo], capture=True, check=False)
 
-    fields = gh_json(["project", "field-list", str(project_number), "--owner", owner, "--format", "json"]) or {"fields": []}
-    status_field = next((item for item in fields["fields"] if item["name"] == "Status"), None)
-    if not status_field:
-        gh_json(
-            [
-                "project",
-                "field-create",
-                str(project_number),
-                "--owner",
-                owner,
-                "--name",
-                "Status",
-                "--data-type",
-                "SINGLE_SELECT",
-                "--single-select-options",
-                "Backlog,Ready,In Progress,In Review,Done,Blocked",
-                "--format",
-                "json",
-            ]
-        )
-
-    existing_items = gh_json(["project", "item-list", str(project_number), "--owner", owner, "--format", "json"]) or {"items": []}
+    existing_items = gh_json(["project", "item-list", str(project_number), "--owner", owner, "--format", "json", "-L", "200"]) or {"items": []}
     existing_content_ids = {
         item.get("content", {}).get("number")
         for item in existing_items["items"]
@@ -489,10 +621,13 @@ def ensure_project(repo: str, state: dict[str, Any], owner: str, all_issue_numbe
             capture=True,
             check=False,
         )
-
-    state["warnings"].append(
-        "GitHub project saved views are not exposed through the current CLI workflow; create the named views in the web UI if they are still missing."
-    )
+    refreshed_project = gh_json(["project", "view", str(project_number), "--owner", owner, "--format", "json"])
+    state["project"]["id"] = refreshed_project["id"]
+    state["project"]["url"] = refreshed_project["url"]
+    status_field_id, backlog_option_id = ensure_project_status_field(owner, project_number, state)
+    total_items = ensure_project_item_statuses(owner, project_number, refreshed_project["id"], status_field_id, backlog_option_id)
+    state["project"]["item_count"] = total_items
+    ensure_project_views(owner, project_number, refreshed_project["id"], state)
 
 
 def main() -> int:

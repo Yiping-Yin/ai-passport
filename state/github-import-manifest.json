@@ -212,7 +212,45 @@
       "url": "https://github.com/Yiping-Yin/ai-passport/milestone/24"
     }
   },
-  "project": null,
+  "project": {
+    "id": "PVT_kwHODHRhts4BTw9m",
+    "item_count": 91,
+    "number": 1,
+    "owner": "Yiping-Yin",
+    "status_field": {
+      "id": "PVTSSF_lAHODHRhts4BTw9mzhA9pAA",
+      "options": {
+        "Backlog": "a4d5f400",
+        "Blocked": "02891b7c",
+        "Done": "5f429443",
+        "In Progress": "a69e02bc",
+        "In Review": "7569ac64",
+        "Ready": "53adb5c2"
+      }
+    },
+    "title": "AI Knowledge Passport Delivery",
+    "url": "https://github.com/users/Yiping-Yin/projects/1",
+    "views": {
+      "Blocked": {
+        "filter": "status:\"Blocked\" OR label:blocked",
+        "layout": "TABLE_LAYOUT",
+        "number": 3,
+        "url": "https://github.com/users/Yiping-Yin/projects/1/views/3"
+      },
+      "By Epic": {
+        "filter": "is:issue label:type:epic",
+        "layout": "TABLE_LAYOUT",
+        "number": 4,
+        "url": "https://github.com/users/Yiping-Yin/projects/1/views/4"
+      },
+      "Current Milestone": {
+        "filter": "is:issue is:open milestone:\"Milestone 1.1 \u2014 Repository reconnaissance and architecture baseline\"",
+        "layout": "TABLE_LAYOUT",
+        "number": 2,
+        "url": "https://github.com/users/Yiping-Yin/projects/1/views/2"
+      }
+    }
+  },
   "repo": "Yiping-Yin/ai-passport",
   "tickets": {
     "E1-M1-T01": {
@@ -714,7 +752,5 @@
       "url": "https://github.com/Yiping-Yin/ai-passport/issues/91"
     }
   },
-  "warnings": [
-    "Project provisioning skipped: error: your authentication token is missing required scopes [read:project]\nTo request it, run:  gh auth refresh -s read:project"
-  ]
+  "warnings": []
 }
