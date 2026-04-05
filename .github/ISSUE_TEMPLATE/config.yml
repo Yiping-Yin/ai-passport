@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Product PRD
+    url: https://github.com/Yiping-Yin/ai-passport/blob/main/docs/spec/product-prd.md
+    about: Canonical product context for new work.
+  - name: Execution Backlog
+    url: https://github.com/Yiping-Yin/ai-passport/blob/main/docs/spec/execution-backlog.md
+    about: Canonical execution backlog and milestone sequencing.

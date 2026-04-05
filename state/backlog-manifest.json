@@ -1,0 +1,1028 @@
+{
+  "counts": {
+    "epics": 8,
+    "milestones": 24,
+    "tickets": 83
+  },
+  "definition_of_done": [
+    "The scoped functionality exists in the real repo.",
+    "Tests for the changed behavior pass.",
+    "Typecheck and lint pass.",
+    "Documentation is updated.",
+    "No new permission or traceability regressions are introduced.",
+    "The milestone does not violate the product\u2019s core principles: Passport-first, read-only-first, evidence-backed, and review-controlled writeback."
+  ],
+  "epics": [
+    {
+      "area_label": "area:foundations",
+      "goal": "Create a stable product vocabulary, repository baseline, domain model, and persistence layer so the rest of the system can be built without naming drift or architectural confusion.",
+      "milestones": [
+        {
+          "epic_number": 1,
+          "epic_title": "Epic 1. Foundations and Domain Contracts",
+          "outcome": "The team understands the real repo and freezes the initial execution plan.",
+          "tickets": [
+            {
+              "acceptance": "`Documentation.md` contains verified commands that run in the real repo.",
+              "code": "E1-M1-T01",
+              "epic_title": "Epic 1. Foundations and Domain Contracts",
+              "milestone": "Milestone 1.1 \u2014 Repository reconnaissance and architecture baseline",
+              "short_title": "Inventory repository structure and commands",
+              "summary": "Document the package manager, runtime, app/package layout, migration command, lint command, typecheck command, and test command.",
+              "title": "E1-M1-T01 \u2014 Inventory repository structure and commands"
+            },
+            {
+              "acceptance": "one architecture section or ADR exists and names each module\u2019s responsibility.",
+              "code": "E1-M1-T02",
+              "epic_title": "Epic 1. Foundations and Domain Contracts",
+              "milestone": "Milestone 1.1 \u2014 Repository reconnaissance and architecture baseline",
+              "short_title": "Freeze module boundaries",
+              "summary": "Define the intended package/module boundaries for domain, compiler, passport, gateway, review, and UI layers.",
+              "title": "E1-M1-T02 \u2014 Freeze module boundaries"
+            },
+            {
+              "acceptance": "branch/migration policy is written and referenced from the main planning docs.",
+              "code": "E1-M1-T03",
+              "epic_title": "Epic 1. Foundations and Domain Contracts",
+              "milestone": "Milestone 1.1 \u2014 Repository reconnaissance and architecture baseline",
+              "short_title": "Establish branch and migration policy",
+              "summary": "Define naming conventions for feature branches, migration files, and seed data.",
+              "title": "E1-M1-T03 \u2014 Establish branch and migration policy"
+            },
+            {
+              "acceptance": "CI or equivalent local script exists and fails on broken checks.",
+              "code": "E1-M1-T04",
+              "epic_title": "Epic 1. Foundations and Domain Contracts",
+              "milestone": "Milestone 1.1 \u2014 Repository reconnaissance and architecture baseline",
+              "short_title": "Set up baseline CI tasks",
+              "summary": "Ensure lint, typecheck, and test commands can run locally and in CI, even if some suites are placeholders at first.",
+              "title": "E1-M1-T04 \u2014 Set up baseline CI tasks"
+            }
+          ],
+          "title": "Milestone 1.1 \u2014 Repository reconnaissance and architecture baseline"
+        },
+        {
+          "epic_number": 1,
+          "epic_title": "Epic 1. Foundations and Domain Contracts",
+          "outcome": "The canonical entity set and invariants are defined in code.",
+          "tickets": [
+            {
+              "acceptance": "all core entities compile and expose required fields from the PRD.",
+              "code": "E1-M2-T01",
+              "epic_title": "Epic 1. Foundations and Domain Contracts",
+              "milestone": "Milestone 1.2 \u2014 Core domain entities and invariants",
+              "short_title": "Define entity schemas/types",
+              "summary": "Create typed models for Workspace, Source, KnowledgeNode, EvidenceFragment, CapabilitySignal, MistakePattern, FocusCard, Postcard, Passport, VisaBundle, MountSession, ReviewCandidate, and AuditLog.",
+              "title": "E1-M2-T01 \u2014 Define entity schemas/types"
+            },
+            {
+              "acceptance": "invariants are represented in domain code and covered by tests.",
+              "code": "E1-M2-T02",
+              "epic_title": "Epic 1. Foundations and Domain Contracts",
+              "milestone": "Milestone 1.2 \u2014 Core domain entities and invariants",
+              "short_title": "Encode invariant rules",
+              "summary": "Express key invariants such as read-only-first, no auto-merge writeback, versioned snapshots, and whitelist-only access.",
+              "title": "E1-M2-T02 \u2014 Encode invariant rules"
+            },
+            {
+              "acceptance": "enums are centralized and reused consistently.",
+              "code": "E1-M2-T03",
+              "epic_title": "Epic 1. Foundations and Domain Contracts",
+              "milestone": "Milestone 1.2 \u2014 Core domain entities and invariants",
+              "short_title": "Freeze enums and status vocabularies",
+              "summary": "Define stable enums for workspace types, node types, card types, candidate status, session status, and Visa status.",
+              "title": "E1-M2-T03 \u2014 Freeze enums and status vocabularies"
+            },
+            {
+              "acceptance": "a documented mapping exists between internal objects and transport shape.",
+              "code": "E1-M2-T04",
+              "epic_title": "Epic 1. Foundations and Domain Contracts",
+              "milestone": "Milestone 1.2 \u2014 Core domain entities and invariants",
+              "short_title": "Add domain-level serialization contracts",
+              "summary": "Define how domain objects are serialized for storage and API response use.",
+              "title": "E1-M2-T04 \u2014 Add domain-level serialization contracts"
+            }
+          ],
+          "title": "Milestone 1.2 \u2014 Core domain entities and invariants"
+        },
+        {
+          "epic_number": 1,
+          "epic_title": "Epic 1. Foundations and Domain Contracts",
+          "outcome": "The data model exists in storage with initial seed data.",
+          "tickets": [
+            {
+              "acceptance": "migration can be applied to an empty database and rolled back safely.",
+              "code": "E1-M3-T01",
+              "epic_title": "Epic 1. Foundations and Domain Contracts",
+              "milestone": "Milestone 1.3 \u2014 Persistence schema, migrations, and seed workspace",
+              "short_title": "Create initial database migration",
+              "summary": "Add the first migration covering all MVP tables and indexes.",
+              "title": "E1-M3-T01 \u2014 Create initial database migration"
+            },
+            {
+              "acceptance": "seed command produces a usable local dev state.",
+              "code": "E1-M3-T02",
+              "epic_title": "Epic 1. Foundations and Domain Contracts",
+              "milestone": "Milestone 1.3 \u2014 Persistence schema, migrations, and seed workspace",
+              "short_title": "Seed one sample workspace",
+              "summary": "Add sample data including one workspace, a few sources, nodes, evidence fragments, and one draft passport.",
+              "title": "E1-M3-T02 \u2014 Seed one sample workspace"
+            },
+            {
+              "acceptance": "tests cover critical foreign-key or logical-link integrity.",
+              "code": "E1-M3-T03",
+              "epic_title": "Epic 1. Foundations and Domain Contracts",
+              "milestone": "Milestone 1.3 \u2014 Persistence schema, migrations, and seed workspace",
+              "short_title": "Add repository tests for relations",
+              "summary": "Verify entity relationships such as source -> evidence -> node and passport -> visa -> session.",
+              "title": "E1-M3-T03 \u2014 Add repository tests for relations"
+            },
+            {
+              "acceptance": "docs include an entity relationship summary.",
+              "code": "E1-M3-T04",
+              "epic_title": "Epic 1. Foundations and Domain Contracts",
+              "milestone": "Milestone 1.3 \u2014 Persistence schema, migrations, and seed workspace",
+              "short_title": "Document the schema",
+              "summary": "Add a schema overview to the docs so Codex and human reviewers share the same model.",
+              "title": "E1-M3-T04 \u2014 Document the schema"
+            }
+          ],
+          "title": "Milestone 1.3 \u2014 Persistence schema, migrations, and seed workspace"
+        }
+      ],
+      "number": 1,
+      "related_prd": "US-01 to US-04, US-11 to US-13, FR-01 to FR-07, FR-34 to FR-37",
+      "title": "Epic 1. Foundations and Domain Contracts"
+    },
+    {
+      "area_label": "area:workspace-intake",
+      "goal": "Allow users to create workspaces, import raw materials, preserve source truth, and manage intake through an Inbox.",
+      "milestones": [
+        {
+          "epic_number": 2,
+          "epic_title": "Epic 2. Workspace, Inbox, and Source Intake",
+          "outcome": "Users can create isolated workspaces and begin cold start.",
+          "tickets": [
+            {
+              "acceptance": "workspace CRUD works and enforces type validation.",
+              "code": "E2-M1-T01",
+              "epic_title": "Epic 2. Workspace, Inbox, and Source Intake",
+              "milestone": "Milestone 2.1 \u2014 Workspace lifecycle and onboarding",
+              "short_title": "Create workspace service and API",
+              "summary": "Implement create/list/read/update/archive operations for personal, work, and project workspaces.",
+              "title": "E2-M1-T01 \u2014 Create workspace service and API"
+            },
+            {
+              "acceptance": "switching workspace updates all visible data scopes correctly.",
+              "code": "E2-M1-T02",
+              "epic_title": "Epic 2. Workspace, Inbox, and Source Intake",
+              "milestone": "Milestone 2.1 \u2014 Workspace lifecycle and onboarding",
+              "short_title": "Build workspace switcher state",
+              "summary": "Add UI/application state for selecting the active workspace without leaking data across workspaces.",
+              "title": "E2-M1-T02 \u2014 Build workspace switcher state"
+            },
+            {
+              "acceptance": "the dashboard can distinguish \u201cnot started,\u201d \u201cin progress,\u201d and \u201cready for draft.\u201d",
+              "code": "E2-M1-T03",
+              "epic_title": "Epic 2. Workspace, Inbox, and Source Intake",
+              "milestone": "Milestone 2.1 \u2014 Workspace lifecycle and onboarding",
+              "short_title": "Add cold-start readiness placeholders",
+              "summary": "Show a first-run onboarding state and a placeholder readiness indicator before Passport generation exists.",
+              "title": "E2-M1-T03 \u2014 Add cold-start readiness placeholders"
+            }
+          ],
+          "title": "Milestone 2.1 \u2014 Workspace lifecycle and onboarding"
+        },
+        {
+          "epic_number": 2,
+          "epic_title": "Epic 2. Workspace, Inbox, and Source Intake",
+          "outcome": "Raw inputs are ingested, stored, and never overwritten.",
+          "tickets": [
+            {
+              "acceptance": "supported input types can be stored as Source objects.",
+              "code": "E2-M2-T01",
+              "epic_title": "Epic 2. Workspace, Inbox, and Source Intake",
+              "milestone": "Milestone 2.2 \u2014 Source intake and raw preservation",
+              "short_title": "Implement source import pipeline",
+              "summary": "Create import handlers for web page text, Markdown, PDF text extraction results, plain text, and project documents.",
+              "title": "E2-M2-T01 \u2014 Implement source import pipeline"
+            },
+            {
+              "acceptance": "no imported source can exist without complete provenance metadata.",
+              "code": "E2-M2-T02",
+              "epic_title": "Epic 2. Workspace, Inbox, and Source Intake",
+              "milestone": "Milestone 2.2 \u2014 Source intake and raw preservation",
+              "short_title": "Persist raw content and metadata",
+              "summary": "Store raw content reference, origin, import timestamp, workspace id, and privacy level.",
+              "title": "E2-M2-T02 \u2014 Persist raw content and metadata"
+            },
+            {
+              "acceptance": "invalid privacy settings are rejected.",
+              "code": "E2-M2-T03",
+              "epic_title": "Epic 2. Workspace, Inbox, and Source Intake",
+              "milestone": "Milestone 2.2 \u2014 Source intake and raw preservation",
+              "short_title": "Add privacy-level defaults and validation",
+              "summary": "Define allowed privacy levels and default assignment on import.",
+              "title": "E2-M2-T03 \u2014 Add privacy-level defaults and validation"
+            },
+            {
+              "acceptance": "recompilation changes derived objects only.",
+              "code": "E2-M2-T04",
+              "epic_title": "Epic 2. Workspace, Inbox, and Source Intake",
+              "milestone": "Milestone 2.2 \u2014 Source intake and raw preservation",
+              "short_title": "Prevent raw overwrite on recompilation",
+              "summary": "Ensure compile runs never mutate the canonical raw source record.",
+              "title": "E2-M2-T04 \u2014 Prevent raw overwrite on recompilation"
+            }
+          ],
+          "title": "Milestone 2.2 \u2014 Source intake and raw preservation"
+        },
+        {
+          "epic_number": 2,
+          "epic_title": "Epic 2. Workspace, Inbox, and Source Intake",
+          "outcome": "Imported items appear in Inbox and can be compiled or retried.",
+          "tickets": [
+            {
+              "acceptance": "Inbox reflects the actual source/compile state.",
+              "code": "E2-M3-T01",
+              "epic_title": "Epic 2. Workspace, Inbox, and Source Intake",
+              "milestone": "Milestone 2.3 \u2014 Inbox operations and compile trigger",
+              "short_title": "Build Inbox list and status model",
+              "summary": "Show source title, type, workspace, import time, compile status, and last error.",
+              "title": "E2-M3-T01 \u2014 Build Inbox list and status model"
+            },
+            {
+              "acceptance": "compile jobs can be created, updated, retried, and inspected.",
+              "code": "E2-M3-T02",
+              "epic_title": "Epic 2. Workspace, Inbox, and Source Intake",
+              "milestone": "Milestone 2.3 \u2014 Inbox operations and compile trigger",
+              "short_title": "Create compile job records",
+              "summary": "Add job records with queued/running/succeeded/failed states.",
+              "title": "E2-M3-T02 \u2014 Create compile job records"
+            },
+            {
+              "acceptance": "Inbox supports side-by-side source and compile preview.",
+              "code": "E2-M3-T03",
+              "epic_title": "Epic 2. Workspace, Inbox, and Source Intake",
+              "milestone": "Milestone 2.3 \u2014 Inbox operations and compile trigger",
+              "short_title": "Add source preview and evidence preview panel",
+              "summary": "Allow users to inspect the raw source and preview extracted evidence where available.",
+              "title": "E2-M3-T03 \u2014 Add source preview and evidence preview panel"
+            },
+            {
+              "acceptance": "a user can re-run compilation without duplicating the source.",
+              "code": "E2-M3-T04",
+              "epic_title": "Epic 2. Workspace, Inbox, and Source Intake",
+              "milestone": "Milestone 2.3 \u2014 Inbox operations and compile trigger",
+              "short_title": "Add recompile action",
+              "summary": "Allow failed or stale imports to be recompiled manually.",
+              "title": "E2-M3-T04 \u2014 Add recompile action"
+            }
+          ],
+          "title": "Milestone 2.3 \u2014 Inbox operations and compile trigger"
+        }
+      ],
+      "number": 2,
+      "related_prd": "US-01, US-02, FR-01 to FR-07",
+      "title": "Epic 2. Workspace, Inbox, and Source Intake"
+    },
+    {
+      "area_label": "area:compiler-evidence",
+      "goal": "Compile raw sources into reusable structured knowledge while preserving traceability.",
+      "milestones": [
+        {
+          "epic_number": 3,
+          "epic_title": "Epic 3. Compilation Core and Evidence Traceability",
+          "outcome": "The system can create foundational topic/project/method/question nodes.",
+          "tickets": [
+            {
+              "acceptance": "at least one fixture source can compile into all supported node classes.",
+              "code": "E3-M1-T01",
+              "epic_title": "Epic 3. Compilation Core and Evidence Traceability",
+              "milestone": "Milestone 3.1 \u2014 Knowledge node generation",
+              "short_title": "Implement node generation pipeline",
+              "summary": "Create compiler logic that emits topic, project, method, and question nodes from imported content.",
+              "title": "E3-M1-T01 \u2014 Implement node generation pipeline"
+            },
+            {
+              "acceptance": "related nodes are visible from either linked side.",
+              "code": "E3-M1-T02",
+              "epic_title": "Epic 3. Compilation Core and Evidence Traceability",
+              "milestone": "Milestone 3.1 \u2014 Knowledge node generation",
+              "short_title": "Add reverse link support",
+              "summary": "Support bidirectional or discoverable reverse relationships between nodes.",
+              "title": "E3-M1-T02 \u2014 Add reverse link support"
+            },
+            {
+              "acceptance": "updates produce traceable revisions or version history.",
+              "code": "E3-M1-T03",
+              "epic_title": "Epic 3. Compilation Core and Evidence Traceability",
+              "milestone": "Milestone 3.1 \u2014 Knowledge node generation",
+              "short_title": "Version compiled node revisions",
+              "summary": "Preserve meaningful node revisions instead of replacing every output blindly.",
+              "title": "E3-M1-T03 \u2014 Version compiled node revisions"
+            }
+          ],
+          "title": "Milestone 3.1 \u2014 Knowledge node generation"
+        },
+        {
+          "epic_number": 3,
+          "epic_title": "Epic 3. Compilation Core and Evidence Traceability",
+          "outcome": "Every high-level object can point back to source evidence.",
+          "tickets": [
+            {
+              "acceptance": "fragments contain source reference, locator, excerpt, and confidence.",
+              "code": "E3-M2-T01",
+              "epic_title": "Epic 3. Compilation Core and Evidence Traceability",
+              "milestone": "Milestone 3.2 \u2014 Evidence fragment extraction and linkage",
+              "short_title": "Implement evidence fragment extraction",
+              "summary": "Extract citeable fragments with locator information from sources.",
+              "title": "E3-M2-T01 \u2014 Implement evidence fragment extraction"
+            },
+            {
+              "acceptance": "every generated node shows evidence links when viewed or serialized.",
+              "code": "E3-M2-T02",
+              "epic_title": "Epic 3. Compilation Core and Evidence Traceability",
+              "milestone": "Milestone 3.2 \u2014 Evidence fragment extraction and linkage",
+              "short_title": "Link nodes to evidence",
+              "summary": "Associate nodes with one or more evidence fragments.",
+              "title": "E3-M2-T02 \u2014 Link nodes to evidence"
+            },
+            {
+              "acceptance": "UI/API can resolve a postcard or node to concrete source provenance.",
+              "code": "E3-M2-T03",
+              "epic_title": "Epic 3. Compilation Core and Evidence Traceability",
+              "milestone": "Milestone 3.2 \u2014 Evidence fragment extraction and linkage",
+              "short_title": "Build source-jump contract",
+              "summary": "Add a reusable contract for \u201cjump to source location\u201d from higher-level objects.",
+              "title": "E3-M2-T03 \u2014 Build source-jump contract"
+            }
+          ],
+          "title": "Milestone 3.2 \u2014 Evidence fragment extraction and linkage"
+        },
+        {
+          "epic_number": 3,
+          "epic_title": "Epic 3. Compilation Core and Evidence Traceability",
+          "outcome": "Users can inspect and correct derived knowledge.",
+          "tickets": [
+            {
+              "acceptance": "edited fields persist and remain marked as user-modified.",
+              "code": "E3-M3-T01",
+              "epic_title": "Epic 3. Compilation Core and Evidence Traceability",
+              "milestone": "Milestone 3.3 \u2014 Human reviewability of compile output",
+              "short_title": "Add manual edit support for key node fields",
+              "summary": "Allow a user to edit title, summary, body, or relation data on generated nodes.",
+              "title": "E3-M3-T01 \u2014 Add manual edit support for key node fields"
+            },
+            {
+              "acceptance": "the system can tell whether a field is machine-generated, human-edited, or mixed.",
+              "code": "E3-M3-T02",
+              "epic_title": "Epic 3. Compilation Core and Evidence Traceability",
+              "milestone": "Milestone 3.3 \u2014 Human reviewability of compile output",
+              "short_title": "Distinguish generated vs user-edited content",
+              "summary": "Preserve provenance of generated text versus human edits.",
+              "title": "E3-M3-T02 \u2014 Distinguish generated vs user-edited content"
+            },
+            {
+              "acceptance": "users can inspect meaningful before/after changes.",
+              "code": "E3-M3-T03",
+              "epic_title": "Epic 3. Compilation Core and Evidence Traceability",
+              "milestone": "Milestone 3.3 \u2014 Human reviewability of compile output",
+              "short_title": "Add compile diff visibility",
+              "summary": "Show what changed between previous and current compile outputs for a node.",
+              "title": "E3-M3-T03 \u2014 Add compile diff visibility"
+            }
+          ],
+          "title": "Milestone 3.3 \u2014 Human reviewability of compile output"
+        }
+      ],
+      "number": 3,
+      "related_prd": "US-03, US-04, FR-08 to FR-11",
+      "title": "Epic 3. Compilation Core and Evidence Traceability"
+    },
+    {
+      "area_label": "area:signals-focus",
+      "goal": "Represent demonstrated practice, recurring gaps, and the user\u2019s active objective without collapsing them into oversimplified scores.",
+      "milestones": [
+        {
+          "epic_number": 4,
+          "epic_title": "Epic 4. Capability Signals, Mistake Patterns, and Focus Layer",
+          "outcome": "The system emits evidence-backed capability signals.",
+          "tickets": [
+            {
+              "acceptance": "signals serialize cleanly and are displayable in Knowledge and Passport views.",
+              "code": "E4-M1-T01",
+              "epic_title": "Epic 4. Capability Signals, Mistake Patterns, and Focus Layer",
+              "milestone": "Milestone 4.1 \u2014 Capability signal generation",
+              "short_title": "Define capability signal schema and rendering contract",
+              "summary": "Represent topic, observed practice, current gaps, confidence, and evidence links.",
+              "title": "E4-M1-T01 \u2014 Define capability signal schema and rendering contract"
+            },
+            {
+              "acceptance": "sample workspaces produce at least a small set of useful signals.",
+              "code": "E4-M1-T02",
+              "epic_title": "Epic 4. Capability Signals, Mistake Patterns, and Focus Layer",
+              "milestone": "Milestone 4.1 \u2014 Capability signal generation",
+              "short_title": "Generate initial capability signals from compiled nodes",
+              "summary": "Derive signals from projects, methods, and topic evidence.",
+              "title": "E4-M1-T02 \u2014 Generate initial capability signals from compiled nodes"
+            },
+            {
+              "acceptance": "API, UI, and domain model expose signals only, not scores.",
+              "code": "E4-M1-T03",
+              "epic_title": "Epic 4. Capability Signals, Mistake Patterns, and Focus Layer",
+              "milestone": "Milestone 4.1 \u2014 Capability signal generation",
+              "short_title": "Explicitly prohibit numeric capability scores",
+              "summary": "Prevent any single ranking score from appearing as the canonical interpretation.",
+              "title": "E4-M1-T03 \u2014 Explicitly prohibit numeric capability scores"
+            }
+          ],
+          "title": "Milestone 4.1 \u2014 Capability signal generation"
+        },
+        {
+          "epic_number": 4,
+          "epic_title": "Epic 4. Capability Signals, Mistake Patterns, and Focus Layer",
+          "outcome": "The system can detect and manage recurring mistake patterns.",
+          "tickets": [
+            {
+              "acceptance": "patterns can be stored, versioned, and displayed.",
+              "code": "E4-M2-T01",
+              "epic_title": "Epic 4. Capability Signals, Mistake Patterns, and Focus Layer",
+              "milestone": "Milestone 4.2 \u2014 Mistake pattern generation and controls",
+              "short_title": "Define mistake pattern schema",
+              "summary": "Include topic, description, examples, recurrence count, and fix suggestions.",
+              "title": "E4-M2-T01 \u2014 Define mistake pattern schema"
+            },
+            {
+              "acceptance": "at least one benchmark fixture can produce a stable mistake pattern.",
+              "code": "E4-M2-T02",
+              "epic_title": "Epic 4. Capability Signals, Mistake Patterns, and Focus Layer",
+              "milestone": "Milestone 4.2 \u2014 Mistake pattern generation and controls",
+              "short_title": "Generate mistake patterns from repeated evidence",
+              "summary": "Produce patterns from repeated errors, repeated questions, or repeated corrections.",
+              "title": "E4-M2-T02 \u2014 Generate mistake patterns from repeated evidence"
+            },
+            {
+              "acceptance": "dismissed or hidden patterns are respected in Passport output.",
+              "code": "E4-M2-T03",
+              "epic_title": "Epic 4. Capability Signals, Mistake Patterns, and Focus Layer",
+              "milestone": "Milestone 4.2 \u2014 Mistake pattern generation and controls",
+              "short_title": "Add user confirm/hide/dismiss actions",
+              "summary": "Let users control visibility and trust for each mistake pattern.",
+              "title": "E4-M2-T03 \u2014 Add user confirm/hide/dismiss actions"
+            }
+          ],
+          "title": "Milestone 4.2 \u2014 Mistake pattern generation and controls"
+        },
+        {
+          "epic_number": 4,
+          "epic_title": "Epic 4. Capability Signals, Mistake Patterns, and Focus Layer",
+          "outcome": "The system can represent what the user is currently trying to solve.",
+          "tickets": [
+            {
+              "acceptance": "exactly one active focus can be designated per workspace in MVP.",
+              "code": "E4-M3-T01",
+              "epic_title": "Epic 4. Capability Signals, Mistake Patterns, and Focus Layer",
+              "milestone": "Milestone 4.3 \u2014 Focus Card lifecycle",
+              "short_title": "Implement Focus Card domain and CRUD",
+              "summary": "Support creation, editing, switching, archiving, and status transitions.",
+              "title": "E4-M3-T01 \u2014 Implement Focus Card domain and CRUD"
+            },
+            {
+              "acceptance": "invalid or incomplete Focus Cards are rejected by validation.",
+              "code": "E4-M3-T02",
+              "epic_title": "Epic 4. Capability Signals, Mistake Patterns, and Focus Layer",
+              "milestone": "Milestone 4.3 \u2014 Focus Card lifecycle",
+              "short_title": "Add success criteria and timeframe fields",
+              "summary": "Require structured goal, timeframe, priority, and success criteria fields.",
+              "title": "E4-M3-T02 \u2014 Add success criteria and timeframe fields"
+            },
+            {
+              "acceptance": "the machine manifest includes active focus in the default payload.",
+              "code": "E4-M3-T03",
+              "epic_title": "Epic 4. Capability Signals, Mistake Patterns, and Focus Layer",
+              "milestone": "Milestone 4.3 \u2014 Focus Card lifecycle",
+              "short_title": "Prioritize active Focus in Passport reads",
+              "summary": "Ensure the active Focus Card appears in Passport-first access.",
+              "title": "E4-M3-T03 \u2014 Prioritize active Focus in Passport reads"
+            }
+          ],
+          "title": "Milestone 4.3 \u2014 Focus Card lifecycle"
+        }
+      ],
+      "number": 4,
+      "related_prd": "US-05, US-06, US-07, FR-12 to FR-16",
+      "title": "Epic 4. Capability Signals, Mistake Patterns, and Focus Layer"
+    },
+    {
+      "area_label": "area:postcards-passport",
+      "goal": "Compress the compiled knowledge base into concise, explainable objects that external AI can read quickly.",
+      "milestones": [
+        {
+          "epic_number": 5,
+          "epic_title": "Epic 5. Postcards and Passport",
+          "outcome": "The system can generate versioned topic-level Postcards.",
+          "tickets": [
+            {
+              "acceptance": "all postcards conform to one stable schema.",
+              "code": "E5-M1-T01",
+              "epic_title": "Epic 5. Postcards and Passport",
+              "milestone": "Milestone 5.1 \u2014 Postcard generation",
+              "short_title": "Define postcard schema",
+              "summary": "Include known things, done things, common gaps, active questions, next step, evidence links, visibility, and version.",
+              "title": "E5-M1-T01 \u2014 Define postcard schema"
+            },
+            {
+              "acceptance": "postcard class is explicit and visible in storage and UI.",
+              "code": "E5-M1-T02",
+              "epic_title": "Epic 5. Postcards and Passport",
+              "milestone": "Milestone 5.1 \u2014 Postcard generation",
+              "short_title": "Generate four postcard classes",
+              "summary": "Support knowledge, capability, mistake, and exploration postcards.",
+              "title": "E5-M1-T02 \u2014 Generate four postcard classes"
+            },
+            {
+              "acceptance": "a new workspace can produce 3\u20135 strong initial postcards from minimal imports.",
+              "code": "E5-M1-T03",
+              "epic_title": "Epic 5. Postcards and Passport",
+              "milestone": "Milestone 5.1 \u2014 Postcard generation",
+              "short_title": "Generate 3\u20135 representative postcards for cold start",
+              "summary": "Prioritize cold-start quality over broad graph coverage.",
+              "title": "E5-M1-T03 \u2014 Generate 3\u20135 representative postcards for cold start"
+            }
+          ],
+          "title": "Milestone 5.1 \u2014 Postcard generation"
+        },
+        {
+          "epic_number": 5,
+          "epic_title": "Epic 5. Postcards and Passport",
+          "outcome": "Postcards evolve safely as the knowledge base changes.",
+          "tickets": [
+            {
+              "acceptance": "postcard history is preserved rather than overwritten.",
+              "code": "E5-M2-T01",
+              "epic_title": "Epic 5. Postcards and Passport",
+              "milestone": "Milestone 5.2 \u2014 Postcard updates and version review",
+              "short_title": "Regenerate postcard candidates on source changes",
+              "summary": "Generate a new candidate version when relevant nodes or evidence change.",
+              "title": "E5-M2-T01 \u2014 Regenerate postcard candidates on source changes"
+            },
+            {
+              "acceptance": "hidden postcards never appear in default Passport output.",
+              "code": "E5-M2-T02",
+              "epic_title": "Epic 5. Postcards and Passport",
+              "milestone": "Milestone 5.2 \u2014 Postcard updates and version review",
+              "short_title": "Add postcard visibility controls",
+              "summary": "Allow users to hide sensitive postcards or restrict exposure.",
+              "title": "E5-M2-T02 \u2014 Add postcard visibility controls"
+            },
+            {
+              "acceptance": "invalid postcard candidates cannot be promoted.",
+              "code": "E5-M2-T03",
+              "epic_title": "Epic 5. Postcards and Passport",
+              "milestone": "Milestone 5.2 \u2014 Postcard updates and version review",
+              "short_title": "Add postcard quality checks",
+              "summary": "Reject postcard candidates that lack evidence links or required sections.",
+              "title": "E5-M2-T03 \u2014 Add postcard quality checks"
+            }
+          ],
+          "title": "Milestone 5.2 \u2014 Postcard updates and version review"
+        },
+        {
+          "epic_number": 5,
+          "epic_title": "Epic 5. Postcards and Passport",
+          "outcome": "The system can generate a compact human-readable and machine-readable Passport.",
+          "tickets": [
+            {
+              "acceptance": "Passport manifests validate against a stable schema.",
+              "code": "E5-M3-T01",
+              "epic_title": "Epic 5. Postcards and Passport",
+              "milestone": "Milestone 5.3 \u2014 Passport manifest generation",
+              "short_title": "Define Passport manifest schema",
+              "summary": "Include owner summary, theme map, capability signals, active focus, representative postcards, and version.",
+              "title": "E5-M3-T01 \u2014 Define Passport manifest schema"
+            },
+            {
+              "acceptance": "both views stay semantically aligned.",
+              "code": "E5-M3-T02",
+              "epic_title": "Epic 5. Postcards and Passport",
+              "milestone": "Milestone 5.3 \u2014 Passport manifest generation",
+              "short_title": "Generate human-readable and machine-readable variants",
+              "summary": "Produce a human view and a machine manifest from the same underlying snapshot.",
+              "title": "E5-M3-T02 \u2014 Generate human-readable and machine-readable variants"
+            },
+            {
+              "acceptance": "hidden or rewritten content affects the generated Passport output immediately.",
+              "code": "E5-M3-T03",
+              "epic_title": "Epic 5. Postcards and Passport",
+              "milestone": "Milestone 5.3 \u2014 Passport manifest generation",
+              "short_title": "Add owner summary rewrite and redaction controls",
+              "summary": "Allow the user to edit summary language and hide sensitive content.",
+              "title": "E5-M3-T03 \u2014 Add owner summary rewrite and redaction controls"
+            },
+            {
+              "acceptance": "readiness changes predictably as required ingredients appear or disappear.",
+              "code": "E5-M3-T04",
+              "epic_title": "Epic 5. Postcards and Passport",
+              "milestone": "Milestone 5.3 \u2014 Passport manifest generation",
+              "short_title": "Compute Passport Readiness",
+              "summary": "Define and surface a readiness heuristic for whether the workspace is ready to mount.",
+              "title": "E5-M3-T04 \u2014 Compute Passport Readiness"
+            }
+          ],
+          "title": "Milestone 5.3 \u2014 Passport manifest generation"
+        }
+      ],
+      "number": 5,
+      "related_prd": "US-08, US-09, FR-17 to FR-22",
+      "title": "Epic 5. Postcards and Passport"
+    },
+    {
+      "area_label": "area:mounting-access",
+      "goal": "Allow external AI to consume the Passport safely, request deeper scope deliberately, and leave an auditable trail.",
+      "milestones": [
+        {
+          "epic_number": 6,
+          "epic_title": "Epic 6. Mounting, Visa Bundles, and Session Control",
+          "outcome": "External AI can begin with Passport, representative Postcards, and active Focus only.",
+          "tickets": [
+            {
+              "acceptance": "response contains only allowed default objects.",
+              "code": "E6-M1-T01",
+              "epic_title": "Epic 6. Mounting, Visa Bundles, and Session Control",
+              "milestone": "Milestone 6.1 \u2014 Passport-first mount flow",
+              "short_title": "Implement `GET /passport/{id}/manifest`",
+              "summary": "Return the machine-readable Passport manifest.",
+              "title": "E6-M1-T01 \u2014 Implement `GET /passport/{id}/manifest`"
+            },
+            {
+              "acceptance": "unauthorized postcard reads are rejected consistently.",
+              "code": "E6-M1-T02",
+              "epic_title": "Epic 6. Mounting, Visa Bundles, and Session Control",
+              "milestone": "Milestone 6.1 \u2014 Passport-first mount flow",
+              "short_title": "Implement postcard read endpoint",
+              "summary": "Expose read access for whitelisted postcards.",
+              "title": "E6-M1-T02 \u2014 Implement postcard read endpoint"
+            },
+            {
+              "acceptance": "no write path is available without explicit writeback-candidate permission.",
+              "code": "E6-M1-T03",
+              "epic_title": "Epic 6. Mounting, Visa Bundles, and Session Control",
+              "milestone": "Milestone 6.1 \u2014 Passport-first mount flow",
+              "short_title": "Enforce read-only default access",
+              "summary": "Ensure the initial mount flow cannot mutate workspace state.",
+              "title": "E6-M1-T03 \u2014 Enforce read-only default access"
+            }
+          ],
+          "title": "Milestone 6.1 \u2014 Passport-first mount flow"
+        },
+        {
+          "epic_number": 6,
+          "epic_title": "Epic 6. Mounting, Visa Bundles, and Session Control",
+          "outcome": "Deeper reads are permissioned through explicit scope packages.",
+          "tickets": [
+            {
+              "acceptance": "Visas can be created with explicit object inclusion and expiry.",
+              "code": "E6-M2-T01",
+              "epic_title": "Epic 6. Mounting, Visa Bundles, and Session Control",
+              "milestone": "Milestone 6.2 \u2014 Visa Bundles and topic-level access",
+              "short_title": "Implement Visa Bundle model and issuance flow",
+              "summary": "Support scope, included objects, expiry, access mode, and writeback policy.",
+              "title": "E6-M2-T01 \u2014 Implement Visa Bundle model and issuance flow"
+            },
+            {
+              "acceptance": "permission checks are centralized and tested.",
+              "code": "E6-M2-T02",
+              "epic_title": "Epic 6. Mounting, Visa Bundles, and Session Control",
+              "milestone": "Milestone 6.2 \u2014 Visa Bundles and topic-level access",
+              "short_title": "Enforce three MVP permissions",
+              "summary": "Implement `passport_read`, `topic_read`, and `writeback_candidate`.",
+              "title": "E6-M2-T02 \u2014 Enforce three MVP permissions"
+            },
+            {
+              "acceptance": "all deeper reads require explicit object inclusion.",
+              "code": "E6-M2-T03",
+              "epic_title": "Epic 6. Mounting, Visa Bundles, and Session Control",
+              "milestone": "Milestone 6.2 \u2014 Visa Bundles and topic-level access",
+              "short_title": "Block whole-workspace search",
+              "summary": "Prevent any default \u201csearch everything\u201d path for external AI.",
+              "title": "E6-M2-T03 \u2014 Block whole-workspace search"
+            },
+            {
+              "acceptance": "revoked or expired Visas immediately fail authorization checks.",
+              "code": "E6-M2-T04",
+              "epic_title": "Epic 6. Mounting, Visa Bundles, and Session Control",
+              "milestone": "Milestone 6.2 \u2014 Visa Bundles and topic-level access",
+              "short_title": "Add revocation and expiry processing",
+              "summary": "Support manual revoke and automatic expiry.",
+              "title": "E6-M2-T04 \u2014 Add revocation and expiry processing"
+            }
+          ],
+          "title": "Milestone 6.2 \u2014 Visa Bundles and topic-level access"
+        },
+        {
+          "epic_number": 6,
+          "epic_title": "Epic 6. Mounting, Visa Bundles, and Session Control",
+          "outcome": "Every external AI interaction is captured and traceable.",
+          "tickets": [
+            {
+              "acceptance": "every authorized mount creates a session record.",
+              "code": "E6-M3-T01",
+              "epic_title": "Epic 6. Mounting, Visa Bundles, and Session Control",
+              "milestone": "Milestone 6.3 \u2014 Mount sessions and access logs",
+              "short_title": "Implement mount session start/end records",
+              "summary": "Record client type, visa, timestamps, and status.",
+              "title": "E6-M3-T01 \u2014 Implement mount session start/end records"
+            },
+            {
+              "acceptance": "session logs can be queried for object-level access history.",
+              "code": "E6-M3-T02",
+              "epic_title": "Epic 6. Mounting, Visa Bundles, and Session Control",
+              "milestone": "Milestone 6.3 \u2014 Mount sessions and access logs",
+              "short_title": "Record access actions within session",
+              "summary": "Track which objects were read and which writeback candidates were submitted.",
+              "title": "E6-M3-T02 \u2014 Record access actions within session"
+            },
+            {
+              "acceptance": "a user can inspect active and historical sessions in one screen.",
+              "code": "E6-M3-T03",
+              "epic_title": "Epic 6. Mounting, Visa Bundles, and Session Control",
+              "milestone": "Milestone 6.3 \u2014 Mount sessions and access logs",
+              "short_title": "Build Mount screen with session list and status",
+              "summary": "Provide an operator view for Visa Bundles, sessions, and revoke actions.",
+              "title": "E6-M3-T03 \u2014 Build Mount screen with session list and status"
+            }
+          ],
+          "title": "Milestone 6.3 \u2014 Mount sessions and access logs"
+        }
+      ],
+      "number": 6,
+      "related_prd": "US-10, US-11, FR-23 to FR-28",
+      "title": "Epic 6. Mounting, Visa Bundles, and Session Control"
+    },
+    {
+      "area_label": "area:review-governance",
+      "goal": "Create the trust layer that prevents silent knowledge pollution and preserves user control.",
+      "milestones": [
+        {
+          "epic_number": 7,
+          "epic_title": "Epic 7. Review Queue, Audit, Export, and Recovery",
+          "outcome": "External AI outputs become reviewable candidates instead of canonical writes.",
+          "tickets": [
+            {
+              "acceptance": "no candidate can exist without a valid source session.",
+              "code": "E7-M1-T01",
+              "epic_title": "Epic 7. Review Queue, Audit, Export, and Recovery",
+              "milestone": "Milestone 7.1 \u2014 Review Queue ingestion and candidate model",
+              "short_title": "Implement `POST /writeback-candidates`",
+              "summary": "Create review candidates linked to the originating mount session.",
+              "title": "E7-M1-T01 \u2014 Implement `POST /writeback-candidates`"
+            },
+            {
+              "acceptance": "candidate types are validated and mapped to permissible targets.",
+              "code": "E7-M1-T02",
+              "epic_title": "Epic 7. Review Queue, Audit, Export, and Recovery",
+              "milestone": "Milestone 7.1 \u2014 Review Queue ingestion and candidate model",
+              "short_title": "Define candidate types and target contracts",
+              "summary": "Support summary, outline, memo, teaching note, question set, and similar candidate classes.",
+              "title": "E7-M1-T02 \u2014 Define candidate types and target contracts"
+            },
+            {
+              "acceptance": "there is no code path from candidate creation to silent merge.",
+              "code": "E7-M1-T03",
+              "epic_title": "Epic 7. Review Queue, Audit, Export, and Recovery",
+              "milestone": "Milestone 7.1 \u2014 Review Queue ingestion and candidate model",
+              "short_title": "Enforce no auto-merge rule",
+              "summary": "Prevent any candidate from writing into canonical knowledge automatically.",
+              "title": "E7-M1-T03 \u2014 Enforce no auto-merge rule"
+            }
+          ],
+          "title": "Milestone 7.1 \u2014 Review Queue ingestion and candidate model"
+        },
+        {
+          "epic_number": 7,
+          "epic_title": "Epic 7. Review Queue, Audit, Export, and Recovery",
+          "outcome": "Users can review, edit, and decide whether a candidate becomes part of the knowledge base.",
+          "tickets": [
+            {
+              "acceptance": "each candidate exposes a renderable diff structure.",
+              "code": "E7-M2-T01",
+              "epic_title": "Epic 7. Review Queue, Audit, Export, and Recovery",
+              "milestone": "Milestone 7.2 \u2014 Review actions and diff visibility",
+              "short_title": "Build candidate diff model",
+              "summary": "Represent before/after deltas against a target node, postcard, or focus card.",
+              "title": "E7-M2-T01 \u2014 Build candidate diff model"
+            },
+            {
+              "acceptance": "all actions are auditable and update candidate status correctly.",
+              "code": "E7-M2-T02",
+              "epic_title": "Epic 7. Review Queue, Audit, Export, and Recovery",
+              "milestone": "Milestone 7.2 \u2014 Review actions and diff visibility",
+              "short_title": "Implement accept / edit then accept / reject actions",
+              "summary": "Add explicit review actions with resulting state transitions.",
+              "title": "E7-M2-T02 \u2014 Implement accept / edit then accept / reject actions"
+            },
+            {
+              "acceptance": "a user can complete the full review flow without leaving the screen.",
+              "code": "E7-M2-T03",
+              "epic_title": "Epic 7. Review Queue, Audit, Export, and Recovery",
+              "milestone": "Milestone 7.2 \u2014 Review actions and diff visibility",
+              "short_title": "Build Review screen",
+              "summary": "Show candidate content, target object, source session, diff, and actions in one workflow.",
+              "title": "E7-M2-T03 \u2014 Build Review screen"
+            }
+          ],
+          "title": "Milestone 7.2 \u2014 Review actions and diff visibility"
+        },
+        {
+          "epic_number": 7,
+          "epic_title": "Epic 7. Review Queue, Audit, Export, and Recovery",
+          "outcome": "Users can inspect history and retain data sovereignty.",
+          "tickets": [
+            {
+              "acceptance": "audit log entries are append-only and queryable.",
+              "code": "E7-M3-T01",
+              "epic_title": "Epic 7. Review Queue, Audit, Export, and Recovery",
+              "milestone": "Milestone 7.3 \u2014 Audit, export, backup, and restore",
+              "short_title": "Add audit event pipeline",
+              "summary": "Record mount, read, revoke, review, export, and restore events.",
+              "title": "E7-M3-T01 \u2014 Add audit event pipeline"
+            },
+            {
+              "acceptance": "a single export contains enough data to restore an MVP workspace.",
+              "code": "E7-M3-T02",
+              "epic_title": "Epic 7. Review Queue, Audit, Export, and Recovery",
+              "milestone": "Milestone 7.3 \u2014 Audit, export, backup, and restore",
+              "short_title": "Implement export package",
+              "summary": "Export core structures, cards, Passport, candidates, and logs.",
+              "title": "E7-M3-T02 \u2014 Implement export package"
+            },
+            {
+              "acceptance": "restore reproduces a valid workspace with preserved relationships.",
+              "code": "E7-M3-T03",
+              "epic_title": "Epic 7. Review Queue, Audit, Export, and Recovery",
+              "milestone": "Milestone 7.3 \u2014 Audit, export, backup, and restore",
+              "short_title": "Implement restore flow",
+              "summary": "Rebuild a workspace from a prior export or backup package.",
+              "title": "E7-M3-T03 \u2014 Implement restore flow"
+            },
+            {
+              "acceptance": "excluded or hidden objects remain excluded when required.",
+              "code": "E7-M3-T04",
+              "epic_title": "Epic 7. Review Queue, Audit, Export, and Recovery",
+              "milestone": "Milestone 7.3 \u2014 Audit, export, backup, and restore",
+              "short_title": "Add privacy-level enforcement across export paths",
+              "summary": "Ensure privacy and visibility rules are respected during export and restore.",
+              "title": "E7-M3-T04 \u2014 Add privacy-level enforcement across export paths"
+            }
+          ],
+          "title": "Milestone 7.3 \u2014 Audit, export, backup, and restore"
+        }
+      ],
+      "number": 7,
+      "related_prd": "US-12, US-13, FR-29 to FR-37",
+      "title": "Epic 7. Review Queue, Audit, Export, and Recovery"
+    },
+    {
+      "area_label": "area:pilot-readiness",
+      "goal": "Deliver the minimum interface and validation tooling needed to run a real pilot and learn whether the product promise is true.",
+      "milestones": [
+        {
+          "epic_number": 8,
+          "epic_title": "Epic 8. Thin UI, Quality Gates, and Pilot Readiness",
+          "outcome": "Users can complete the end-to-end flow through a minimal but coherent interface.",
+          "tickets": [
+            {
+              "acceptance": "Dashboard reflects live data for the selected workspace.",
+              "code": "E8-M1-T01",
+              "epic_title": "Epic 8. Thin UI, Quality Gates, and Pilot Readiness",
+              "milestone": "Milestone 8.1 \u2014 Thin operator UI",
+              "short_title": "Build Dashboard screen",
+              "summary": "Show active Focus, Passport Readiness, recent imports, pending review, and recent mount sessions.",
+              "title": "E8-M1-T01 \u2014 Build Dashboard screen"
+            },
+            {
+              "acceptance": "users can inspect compiled knowledge without navigating a graph explorer.",
+              "code": "E8-M1-T02",
+              "epic_title": "Epic 8. Thin UI, Quality Gates, and Pilot Readiness",
+              "milestone": "Milestone 8.1 \u2014 Thin operator UI",
+              "short_title": "Build Knowledge screen",
+              "summary": "Show nodes, evidence, signals, mistake patterns, linked focus, and postcards in one place.",
+              "title": "E8-M1-T02 \u2014 Build Knowledge screen"
+            },
+            {
+              "acceptance": "Passport can be previewed and managed in one screen.",
+              "code": "E8-M1-T03",
+              "epic_title": "Epic 8. Thin UI, Quality Gates, and Pilot Readiness",
+              "milestone": "Milestone 8.1 \u2014 Thin operator UI",
+              "short_title": "Build Passport screen",
+              "summary": "Show human view, machine view, regenerate, hide, edit, and create Visa actions.",
+              "title": "E8-M1-T03 \u2014 Build Passport screen"
+            },
+            {
+              "acceptance": "operational controls are accessible without developer intervention.",
+              "code": "E8-M1-T04",
+              "epic_title": "Epic 8. Thin UI, Quality Gates, and Pilot Readiness",
+              "milestone": "Milestone 8.1 \u2014 Thin operator UI",
+              "short_title": "Build Settings screen",
+              "summary": "Show workspace config, export, backup, privacy, and default policies.",
+              "title": "E8-M1-T04 \u2014 Build Settings screen"
+            }
+          ],
+          "title": "Milestone 8.1 \u2014 Thin operator UI"
+        },
+        {
+          "epic_number": 8,
+          "epic_title": "Epic 8. Thin UI, Quality Gates, and Pilot Readiness",
+          "outcome": "The team can verify compile quality and trust boundaries repeatedly.",
+          "tickets": [
+            {
+              "acceptance": "benchmark fixtures run deterministically in CI or local eval mode.",
+              "code": "E8-M2-T01",
+              "epic_title": "Epic 8. Thin UI, Quality Gates, and Pilot Readiness",
+              "milestone": "Milestone 8.2 \u2014 Benchmarks, traceability tests, and guardrails",
+              "short_title": "Create benchmark fixtures for compiler quality",
+              "summary": "Add fixed sample inputs and expected properties for nodes, evidence, postcards, and passport outputs.",
+              "title": "E8-M2-T01 \u2014 Create benchmark fixtures for compiler quality"
+            },
+            {
+              "acceptance": "tests fail if postcards or Passport outputs lose evidence traceability.",
+              "code": "E8-M2-T02",
+              "epic_title": "Epic 8. Thin UI, Quality Gates, and Pilot Readiness",
+              "milestone": "Milestone 8.2 \u2014 Benchmarks, traceability tests, and guardrails",
+              "short_title": "Add evidence-trace coverage tests",
+              "summary": "Ensure all high-level objects can resolve to source evidence.",
+              "title": "E8-M2-T02 \u2014 Add evidence-trace coverage tests"
+            },
+            {
+              "acceptance": "access-control tests cover all three MVP permissions and core denial paths.",
+              "code": "E8-M2-T03",
+              "epic_title": "Epic 8. Thin UI, Quality Gates, and Pilot Readiness",
+              "milestone": "Milestone 8.2 \u2014 Benchmarks, traceability tests, and guardrails",
+              "short_title": "Add permission boundary tests",
+              "summary": "Verify that unauthorized reads, revoked visas, expired visas, and whole-workspace search attempts fail.",
+              "title": "E8-M2-T03 \u2014 Add permission boundary tests"
+            },
+            {
+              "acceptance": "tests fail if a direct canonical merge path appears.",
+              "code": "E8-M2-T04",
+              "epic_title": "Epic 8. Thin UI, Quality Gates, and Pilot Readiness",
+              "milestone": "Milestone 8.2 \u2014 Benchmarks, traceability tests, and guardrails",
+              "short_title": "Add writeback pollution tests",
+              "summary": "Verify that no external output bypasses Review Queue.",
+              "title": "E8-M2-T04 \u2014 Add writeback pollution tests"
+            }
+          ],
+          "title": "Milestone 8.2 \u2014 Benchmarks, traceability tests, and guardrails"
+        },
+        {
+          "epic_number": 8,
+          "epic_title": "Epic 8. Thin UI, Quality Gates, and Pilot Readiness",
+          "outcome": "The product is ready for real-user validation.",
+          "tickets": [
+            {
+              "acceptance": "pilot telemetry or logging can measure the PRD metrics.",
+              "code": "E8-M3-T01",
+              "epic_title": "Epic 8. Thin UI, Quality Gates, and Pilot Readiness",
+              "milestone": "Milestone 8.3 \u2014 Release gates and pilot instrumentation",
+              "short_title": "Instrument north-star and leading metrics",
+              "summary": "Track Passport Readiness, review acceptance, session usage, and first-response fit signals.",
+              "title": "E8-M3-T01 \u2014 Instrument north-star and leading metrics"
+            },
+            {
+              "acceptance": "the team can inspect pass/fail status of all gates before pilot.",
+              "code": "E8-M3-T02",
+              "epic_title": "Epic 8. Thin UI, Quality Gates, and Pilot Readiness",
+              "milestone": "Milestone 8.3 \u2014 Release gates and pilot instrumentation",
+              "short_title": "Add release gate checklist",
+              "summary": "Encode the MVP release gates into a visible checklist for engineering and product review.",
+              "title": "E8-M3-T02 \u2014 Add release gate checklist"
+            },
+            {
+              "acceptance": "the scripted path can be executed by a human tester without developer improvisation.",
+              "code": "E8-M3-T03",
+              "epic_title": "Epic 8. Thin UI, Quality Gates, and Pilot Readiness",
+              "milestone": "Milestone 8.3 \u2014 Release gates and pilot instrumentation",
+              "short_title": "Run one end-to-end pilot script",
+              "summary": "Document and test the full flow: import -> compile -> Passport -> mount -> writeback -> review -> export -> restore.",
+              "title": "E8-M3-T03 \u2014 Run one end-to-end pilot script"
+            },
+            {
+              "acceptance": "pilot reviewers have one standard template for reporting fit, trust, and friction.",
+              "code": "E8-M3-T04",
+              "epic_title": "Epic 8. Thin UI, Quality Gates, and Pilot Readiness",
+              "milestone": "Milestone 8.3 \u2014 Release gates and pilot instrumentation",
+              "short_title": "Prepare pilot feedback template",
+              "summary": "Create a structured form or document for collecting \u201cdoes the AI understand me better?\u201d feedback.",
+              "title": "E8-M3-T04 \u2014 Prepare pilot feedback template"
+            }
+          ],
+          "title": "Milestone 8.3 \u2014 Release gates and pilot instrumentation"
+        }
+      ],
+      "number": 8,
+      "related_prd": "All screen sections, NFRs, success metrics, release gates",
+      "title": "Epic 8. Thin UI, Quality Gates, and Pilot Readiness"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+name: Ticket
+description: Create a new delivery ticket scoped to one milestone.
+title: "E?-M?-T?? — "
+labels:
+  - type:ticket
+body:
+  - type: input
+    id: milestone
+    attributes:
+      label: Milestone
+      description: Exact milestone title from the execution backlog.
+    validations:
+      required: true
+  - type: input
+    id: parent_epic
+    attributes:
+      label: Parent Epic
+      description: Parent epic issue number and title.
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: The implementation outcome for this ticket.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: Concrete verification for completion.
+    validations:
+      required: true
+  - type: textarea
+    id: related_prd
+    attributes:
+      label: Related PRD
+      description: Relevant PRD references or linked requirements.
+    validations:
+      required: true

@@ -1,0 +1,34 @@
+name: Epic
+description: Create a new epic that groups multiple milestone tickets.
+title: "Epic X. "
+labels:
+  - type:epic
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: State the outcome this epic should achieve.
+    validations:
+      required: true
+  - type: textarea
+    id: related_prd
+    attributes:
+      label: Related PRD
+      description: Link the relevant user stories or functional requirements.
+    validations:
+      required: true
+  - type: textarea
+    id: milestones
+    attributes:
+      label: Milestones
+      description: List the milestones covered by this epic.
+    validations:
+      required: true
+  - type: textarea
+    id: exit_criteria
+    attributes:
+      label: Exit Criteria
+      description: Confirm the epic-level completion conditions.
+    validations:
+      required: true
