@@ -1,16 +1,17 @@
 # PLANS.md
 
-Current milestone: Milestone 4.1 — Capability signal generation.
+Current milestone: Pilot validation and follow-up tuning.
 
 Active scope:
 
-- Define the capability signal contract
-- Generate initial evidence-backed capability signals from compiled nodes
-- Keep signals descriptive and non-numeric
-- Surface serialization-ready signal output without scoring the user
+- Run the pilot script and gather structured feedback
+- Inspect release gates and metrics after real sessions
+- Tune heuristics and UI based on pilot evidence
+- Keep the MVP contract stable while learning from usage
 
 Out of scope until the next milestone:
 
-- Mistake pattern generation and controls
-- Focus Card prioritization changes
-- Writeback automation
+- Multi-user or networked sharing
+- Enterprise permission expansion
+- Autonomous external actions
+- Model-specific fine-tuning features

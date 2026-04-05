@@ -23,6 +23,9 @@ class StorageTests(unittest.TestCase):
                     "202604062000__knowledge_node_revisions.sql",
                     "202604062030__node_evidence_links.sql",
                     "202604062100__knowledge_node_field_overrides.sql",
+                    "202604062130__insight_controls.sql",
+                    "202604062140__mistake_pattern_evidence.sql",
+                    "202604062200__postcard_revisions.sql",
                 ],
             )
 
@@ -40,19 +43,28 @@ class StorageTests(unittest.TestCase):
                 connection.close()
 
             rolled_back = migrate_down(db_path)
-            self.assertEqual(rolled_back, "202604062100__knowledge_node_field_overrides.sql")
+            self.assertEqual(rolled_back, "202604062200__postcard_revisions.sql")
 
             rolled_back_again = migrate_down(db_path)
-            self.assertEqual(rolled_back_again, "202604062030__node_evidence_links.sql")
+            self.assertEqual(rolled_back_again, "202604062140__mistake_pattern_evidence.sql")
 
             rolled_back_third = migrate_down(db_path)
-            self.assertEqual(rolled_back_third, "202604062000__knowledge_node_revisions.sql")
+            self.assertEqual(rolled_back_third, "202604062130__insight_controls.sql")
 
             rolled_back_fourth = migrate_down(db_path)
-            self.assertEqual(rolled_back_fourth, "202604061730__compile_jobs.sql")
+            self.assertEqual(rolled_back_fourth, "202604062100__knowledge_node_field_overrides.sql")
 
             rolled_back_fifth = migrate_down(db_path)
-            self.assertEqual(rolled_back_fifth, "202604061600__initial_schema.sql")
+            self.assertEqual(rolled_back_fifth, "202604062030__node_evidence_links.sql")
+
+            rolled_back_sixth = migrate_down(db_path)
+            self.assertEqual(rolled_back_sixth, "202604062000__knowledge_node_revisions.sql")
+
+            rolled_back_seventh = migrate_down(db_path)
+            self.assertEqual(rolled_back_seventh, "202604061730__compile_jobs.sql")
+
+            rolled_back_eighth = migrate_down(db_path)
+            self.assertEqual(rolled_back_eighth, "202604061600__initial_schema.sql")
 
             connection = sqlite3.connect(db_path)
             try:
@@ -67,6 +79,7 @@ class StorageTests(unittest.TestCase):
                 self.assertNotIn("knowledge_node_revisions", table_names)
                 self.assertNotIn("node_evidence_links", table_names)
                 self.assertNotIn("knowledge_node_field_overrides", table_names)
+                self.assertNotIn("postcard_revisions", table_names)
                 self.assertIn("schema_migrations", table_names)
             finally:
                 connection.close()

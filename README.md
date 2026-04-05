@@ -41,6 +41,8 @@ This repo follows the implementation guide's local-first defaults:
 python3 scripts/dev.py migrate
 python3 scripts/dev.py seed
 python3 scripts/dev.py ci
+python3 scripts/run_server.py
+python3 scripts/pilot_flow.py
 python3 scripts/seed_github.py --repo Yiping-Yin/ai-passport --validate-only
 python3 scripts/seed_github.py --repo Yiping-Yin/ai-passport --seed
 python3 scripts/seed_github.py --repo Yiping-Yin/ai-passport --seed --project-owner Yiping-Yin

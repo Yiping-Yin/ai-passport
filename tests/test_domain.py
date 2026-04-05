@@ -91,6 +91,7 @@ class DomainModelTests(unittest.TestCase):
             id="mistake-1",
             topic="GitHub Projects",
             description="Retries omitted for long-running syncs",
+            evidence_ids=(evidence.id,),
             examples=("Transient API failures",),
             fix_suggestions=("Add retries",),
             recurrence_count=1,

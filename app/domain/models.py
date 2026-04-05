@@ -13,6 +13,7 @@ from app.domain.enums import (
     CardType,
     CompileJobStatus,
     FocusStatus,
+    InsightDisposition,
     NodeType,
     PassportReadiness,
     PermissionLevel,
@@ -122,6 +123,8 @@ class CapabilitySignal:
     current_gaps: StringList
     confidence: float
     workspace_id: str
+    version: int = 1
+    disposition: InsightDisposition = InsightDisposition.SUGGESTED
     visibility: PrivacyLevel = PrivacyLevel.PRIVATE
 
     def __post_init__(self) -> None:
@@ -130,6 +133,7 @@ class CapabilitySignal:
         ensure_non_empty("capability_signal.observed_practice", self.observed_practice)
         ensure_non_empty("capability_signal.workspace_id", self.workspace_id)
         ensure_confidence("capability_signal.confidence", self.confidence)
+        ensure_version("capability_signal.version", self.version)
         if not self.evidence_ids:
             raise ValueError("capability_signal.evidence_ids must not be empty")
 
@@ -139,10 +143,13 @@ class MistakePattern:
     id: str
     topic: str
     description: str
+    evidence_ids: StringList
     examples: StringList
     fix_suggestions: StringList
     recurrence_count: int
     workspace_id: str
+    version: int = 1
+    disposition: InsightDisposition = InsightDisposition.SUGGESTED
     visibility: PrivacyLevel = PrivacyLevel.PRIVATE
 
     def __post_init__(self) -> None:
@@ -151,6 +158,9 @@ class MistakePattern:
         ensure_non_empty("mistake_pattern.description", self.description)
         ensure_non_empty("mistake_pattern.workspace_id", self.workspace_id)
         ensure_non_negative("mistake_pattern.recurrence_count", self.recurrence_count)
+        ensure_version("mistake_pattern.version", self.version)
+        if not self.evidence_ids:
+            raise ValueError("mistake_pattern.evidence_ids must not be empty")
 
 
 @dataclass(frozen=True, slots=True)

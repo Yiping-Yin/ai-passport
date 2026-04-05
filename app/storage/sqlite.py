@@ -16,13 +16,14 @@ JSON_COLUMNS = {
     "knowledge_nodes": {"source_ids", "related_node_ids"},
     "knowledge_node_revisions": {"source_ids", "related_node_ids"},
     "capability_signals": {"evidence_ids", "current_gaps"},
-    "mistake_patterns": {"examples", "fix_suggestions"},
+    "mistake_patterns": {"evidence_ids", "examples", "fix_suggestions"},
     "focus_cards": {"success_criteria", "related_topics"},
     "postcards": {"known_things", "done_things", "common_gaps", "active_questions", "evidence_links", "related_nodes"},
     "passports": {"theme_map", "capability_signal_ids", "focus_card_ids", "representative_postcard_ids", "machine_manifest"},
     "visa_bundles": {"scope", "included_postcards", "included_nodes", "permission_levels", "redaction_rules"},
     "mount_sessions": {"actions"},
     "review_candidates": {"evidence_ids"},
+    "postcard_revisions": {"known_things", "done_things", "common_gaps", "active_questions", "evidence_links", "related_nodes"},
     "audit_logs": {"meta"},
 }
 

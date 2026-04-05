@@ -13,6 +13,8 @@
 | Typecheck command | `python3 scripts/dev.py typecheck` |
 | Test command | `python3 scripts/dev.py test` |
 | CI command | `python3 scripts/dev.py ci` |
+| Local server | `python3 scripts/run_server.py` |
+| Pilot script | `python3 scripts/pilot_flow.py` |
 
 ## Verified Local Commands
 
@@ -24,6 +26,8 @@ python3 scripts/dev.py lint
 python3 scripts/dev.py typecheck
 python3 scripts/dev.py test
 python3 scripts/dev.py ci
+python3 scripts/run_server.py
+python3 scripts/pilot_flow.py
 python3 scripts/seed_github.py --repo Yiping-Yin/ai-passport --validate-only
 python3 scripts/seed_github.py --repo Yiping-Yin/ai-passport --seed
 ```
@@ -47,3 +51,4 @@ gh api repos/Yiping-Yin/ai-passport/milestones?state=all&per_page=100
 - Module boundaries are frozen in `docs/spec/architecture-baseline.md`.
 - Branch, migration, and seed policies are frozen in `docs/spec/development-policy.md`.
 - Storage tables and relations are documented in `docs/spec/storage-schema.md`.
+- Release gates and pilot feedback references are in `docs/spec/release-gate-checklist.md` and `docs/spec/pilot-feedback-template.md`.

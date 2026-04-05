@@ -43,6 +43,8 @@ Last verified: 2026-04-06
 | Typecheck baseline | `python3 scripts/dev.py typecheck` | Compiles tracked Python modules to catch syntax and import-shape regressions |
 | Test baseline | `python3 scripts/dev.py test` | Runs repo-contract and parser tests |
 | Full CI baseline | `python3 scripts/dev.py ci` | Runs lint, typecheck, and tests in the same sequence as CI |
+| Local MVP server | `python3 scripts/run_server.py` | Starts the stdlib WSGI operator UI and JSON API |
+| Pilot flow | `python3 scripts/pilot_flow.py` | Executes one scripted import -> compile -> passport -> mount -> review -> export -> restore loop |
 | Backlog validation | `python3 scripts/seed_github.py --repo Yiping-Yin/ai-passport --validate-only` | Confirms the backlog still parses as 8 epics, 24 milestones, and 83 tickets |
 
 ## Current Constraints
@@ -51,6 +53,7 @@ Last verified: 2026-04-06
 - The repo uses SQLite JSON text columns for tuple/list fields in the bootstrap schema.
 - Inbox compile jobs are intentionally queue-only scaffolding; the real compiler lands in Epic 3.
 - The compiler now supports section-based node generation, node revisions, evidence links, source-jump lookups, and manual field overrides.
+- The MVP now exposes a local WSGI app with both operator UI screens and the minimal mounting API.
 - `scripts/seed_github.py` is the heaviest live script and should remain stable while Milestone 1.2 introduces domain modules.
 - The GitHub Project seed now requires `gh` auth with `project` scope.
 - Module boundaries are frozen in [architecture-baseline.md](/Users/yinyiping/Desktop/AI passport/docs/spec/architecture-baseline.md) and policy is frozen in [development-policy.md](/Users/yinyiping/Desktop/AI passport/docs/spec/development-policy.md).

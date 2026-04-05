@@ -109,3 +109,9 @@ class FieldProvenance(StrEnum):
 class OverrideMode(StrEnum):
     REPLACE = "replace"
     MERGE = "merge"
+
+
+class InsightDisposition(StrEnum):
+    SUGGESTED = "suggested"
+    CONFIRMED = "confirmed"
+    DISMISSED = "dismissed"
