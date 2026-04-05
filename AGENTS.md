@@ -39,11 +39,18 @@ external AI can read before requesting deeper access.
 - `app/mcp/`: minimal MCP server surface
 - `tests/`: fixtures, golden tests, and integration tests
 
+Baseline references:
+
+- `docs/spec/repository-recon.md`: runtime inventory and verified commands
+- `docs/spec/architecture-baseline.md`: frozen module boundaries
+- `docs/spec/development-policy.md`: branch, migration, and seed conventions
+
 ## Branch and PR Policy
 
 - Branch format: `codex/<ticket-or-milestone-slug>`
 - `main` is protected by PR-only updates
 - CI check names are reserved as `lint`, `typecheck`, and `test`
+- Migration and seed conventions are defined in `docs/spec/development-policy.md`
 
 ## Done Definition
 

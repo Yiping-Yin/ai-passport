@@ -1,0 +1,242 @@
+{
+  "workspaces": [
+    {
+      "id": "ws-personal-demo",
+      "workspace_type": "personal",
+      "title": "Personal Knowledge Lab",
+      "description": "Bootstrap sample workspace for local development.",
+      "created_at": "2026-04-06T09:00:00",
+      "updated_at": "2026-04-06T09:00:00",
+      "tags": [
+        "demo",
+        "personal"
+      ],
+      "privacy_default": "private",
+      "passport_readiness": "in_progress",
+      "archived_at": null
+    }
+  ],
+  "sources": [
+    {
+      "id": "src-python-typing",
+      "source_type": "markdown",
+      "title": "Python Typing Notes",
+      "origin": "notes/python-typing.md",
+      "imported_at": "2026-04-06T09:10:00",
+      "workspace_id": "ws-personal-demo",
+      "privacy_level": "private",
+      "raw_blob_ref": "data/workspaces/personal/raw/python-typing.md",
+      "tags": [
+        "python",
+        "typing"
+      ]
+    }
+  ],
+  "knowledge_nodes": [
+    {
+      "id": "node-python-typing",
+      "node_type": "topic",
+      "title": "Python Typing",
+      "summary": "Notes on using dataclasses, enums, and serializers.",
+      "body": "Domain-first baseline for typed records and evidence-backed outputs.",
+      "source_ids": [
+        "src-python-typing"
+      ],
+      "related_node_ids": [],
+      "updated_at": "2026-04-06T09:20:00",
+      "workspace_id": "ws-personal-demo",
+      "version": 1
+    }
+  ],
+  "evidence_fragments": [
+    {
+      "id": "evidence-python-typing-1",
+      "source_id": "src-python-typing",
+      "locator": "line:1-12",
+      "excerpt": "Typed models and evidence links are the MVP baseline.",
+      "confidence": 0.86
+    }
+  ],
+  "capability_signals": [
+    {
+      "id": "signal-python-typing",
+      "topic": "Python typing",
+      "evidence_ids": [
+        "evidence-python-typing-1"
+      ],
+      "observed_practice": "Builds typed domain models and validation helpers.",
+      "current_gaps": [
+        "Persistence schema still needed"
+      ],
+      "confidence": 0.74,
+      "workspace_id": "ws-personal-demo",
+      "visibility": "private"
+    }
+  ],
+  "mistake_patterns": [
+    {
+      "id": "mistake-retry-omission",
+      "topic": "Long-running syncs",
+      "description": "Retry logic was initially missing for GitHub API writes.",
+      "examples": [
+        "Milestone PATCH transient failure"
+      ],
+      "fix_suggestions": [
+        "Wrap API calls with bounded retries"
+      ],
+      "recurrence_count": 1,
+      "workspace_id": "ws-personal-demo",
+      "visibility": "private"
+    }
+  ],
+  "focus_cards": [
+    {
+      "id": "focus-m1-domain-storage",
+      "title": "Finish foundation milestones",
+      "goal": "Complete domain and storage setup before feature work.",
+      "timeframe": "2026-04-06 week",
+      "priority": 1,
+      "success_criteria": [
+        "Schema applies",
+        "Seed data loads",
+        "Tests pass"
+      ],
+      "related_topics": [
+        "domain",
+        "storage"
+      ],
+      "status": "active",
+      "workspace_id": "ws-personal-demo"
+    }
+  ],
+  "postcards": [
+    {
+      "id": "postcard-python-typing",
+      "card_type": "knowledge",
+      "title": "Python Typing Postcard",
+      "known_things": [
+        "Dataclasses",
+        "Enums",
+        "Serializer helpers"
+      ],
+      "done_things": [
+        "Bootstrapped the repository",
+        "Defined domain entities"
+      ],
+      "common_gaps": [
+        "SQLite schema"
+      ],
+      "active_questions": [
+        "How should migrations track rollback?"
+      ],
+      "suggested_next_step": "Land the first SQLite migration.",
+      "evidence_links": [
+        "evidence-python-typing-1"
+      ],
+      "related_nodes": [
+        "node-python-typing"
+      ],
+      "visibility": "private",
+      "version": 1,
+      "workspace_id": "ws-personal-demo"
+    }
+  ],
+  "passports": [
+    {
+      "id": "passport-personal-demo",
+      "owner_summary": "Local-first learner building a knowledge compiler baseline.",
+      "theme_map": [
+        "python",
+        "knowledge systems"
+      ],
+      "capability_signal_ids": [
+        "signal-python-typing"
+      ],
+      "focus_card_ids": [
+        "focus-m1-domain-storage"
+      ],
+      "representative_postcard_ids": [
+        "postcard-python-typing"
+      ],
+      "machine_manifest": {
+        "version": 1,
+        "representative_postcards": [
+          "postcard-python-typing"
+        ]
+      },
+      "version": 1,
+      "workspace_id": "ws-personal-demo"
+    }
+  ],
+  "visa_bundles": [
+    {
+      "id": "visa-personal-demo",
+      "scope": [
+        "passport",
+        "topic:python"
+      ],
+      "included_postcards": [
+        "postcard-python-typing"
+      ],
+      "included_nodes": [
+        "node-python-typing"
+      ],
+      "permission_levels": [
+        "passport_read",
+        "topic_read"
+      ],
+      "expiry_at": "2026-04-13T09:00:00",
+      "access_mode": "read_only",
+      "writeback_policy": "review_required",
+      "redaction_rules": [
+        "hide_private_examples"
+      ],
+      "status": "active",
+      "version": 1,
+      "workspace_id": "ws-personal-demo"
+    }
+  ],
+  "mount_sessions": [
+    {
+      "id": "session-personal-demo",
+      "client_type": "gpt",
+      "visa_id": "visa-personal-demo",
+      "started_at": "2026-04-06T09:30:00",
+      "ended_at": "2026-04-06T09:45:00",
+      "actions": [
+        "passport_read",
+        "postcard_read"
+      ],
+      "writeback_count": 1,
+      "status": "ended"
+    }
+  ],
+  "review_candidates": [
+    {
+      "id": "candidate-personal-demo",
+      "session_id": "session-personal-demo",
+      "candidate_type": "summary",
+      "content_ref": "content://candidate-personal-demo",
+      "target_object": "node-python-typing",
+      "diff_ref": "diff://candidate-personal-demo",
+      "status": "pending",
+      "version": 1,
+      "evidence_ids": [
+        "evidence-python-typing-1"
+      ]
+    }
+  ],
+  "audit_logs": [
+    {
+      "id": "audit-personal-demo",
+      "actor": "system",
+      "action": "seed_workspace",
+      "object_id": "ws-personal-demo",
+      "timestamp": "2026-04-06T09:46:00",
+      "result": "success",
+      "meta": {
+        "source": "sample_workspace.json"
+      }
+    }
+  ]
+}

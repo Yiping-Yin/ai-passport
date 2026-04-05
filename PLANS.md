@@ -1,17 +1,17 @@
 # PLANS.md
 
-Current milestone: Milestone 1.1 — Repository reconnaissance and architecture baseline.
+Current milestone: Milestone 2.1 — Workspace lifecycle and onboarding.
 
 Active scope:
 
-- Inventory repository structure and verified commands
-- Freeze module boundaries
-- Establish branch and migration policy
-- Set up baseline CI tasks
+- Create workspace CRUD service contracts
+- Add active-workspace state handling
+- Keep workspaces isolated by type and ID
+- Leave cold-start readiness as placeholder behavior until downstream compilation exists
 
 Out of scope until the next milestone:
 
-- UI implementation
-- MCP execution flows
+- Full source import pipeline
+- Compile jobs and evidence extraction
 - Knowledge compilation logic
 - Writeback automation

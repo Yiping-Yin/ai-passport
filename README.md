@@ -22,11 +22,20 @@ This repo follows the implementation guide's local-first defaults:
 - `AGENTS.md`: repo contract, boundaries, and done definition
 - `PLANS.md`: current active milestone only
 - `Documentation.md`: verified local and GitHub bootstrap commands
+- `docs/spec/repository-recon.md`: runtime, commands, and repo inventory
+- `docs/spec/architecture-baseline.md`: frozen module boundaries
+- `docs/spec/development-policy.md`: branch, migration, and seed conventions
+- `docs/spec/storage-schema.md`: initial SQLite table layout and key relations
+- `docs/spec/domain-serialization.md`: transport mapping for domain objects
 - `scripts/seed_github.py`: parse backlog, validate counts, and seed GitHub
+- `scripts/dev.py`: local lint, typecheck, test, migrate, and CI commands
 
 ## Local Commands
 
 ```bash
+python3 scripts/dev.py migrate
+python3 scripts/dev.py seed
+python3 scripts/dev.py ci
 python3 scripts/seed_github.py --repo Yiping-Yin/ai-passport --validate-only
 python3 scripts/seed_github.py --repo Yiping-Yin/ai-passport --seed
 python3 scripts/seed_github.py --repo Yiping-Yin/ai-passport --seed --project-owner Yiping-Yin
