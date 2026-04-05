@@ -124,9 +124,35 @@ class ApiAndUiTests(unittest.TestCase):
         self.assertEqual(status, "200 OK")
         self.assertEqual(candidate["status"], "pending")
 
+        status, imported = self._call_json(
+            "POST",
+            "/api/sources",
+            {
+                "workspace_id": self.workspace_id,
+                "source_type": "plain_text",
+                "title": "Imported via API",
+                "origin": "api-import.txt",
+                "content": "Topic: API import",
+                "imported_at": NOW.isoformat(),
+            },
+        )
+        self.assertEqual(status, "200 OK")
+
+        status, compile_payload = self._call_json(
+            "POST",
+            "/api/compile-jobs",
+            {
+                "source_id": imported["id"],
+                "requested_at": NOW.isoformat(),
+            },
+        )
+        self.assertEqual(status, "200 OK")
+        self.assertTrue(compile_payload["nodes"])
+
     def test_ui_pages_render_expected_sections(self) -> None:
         for path, text in (
             ("/dashboard", "Dashboard"),
+            ("/inbox", "Source Intake and Compile Queue"),
             ("/knowledge", "Compiled Knowledge"),
             ("/passport", "Passport Snapshot"),
             ("/mount", "Visas and Sessions"),

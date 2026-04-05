@@ -48,6 +48,7 @@ from app.storage.sqlite import ROOT as REPO_ROOT
 from app.storage.sqlite import connect
 from app.storage.visas import VisaBundleRepository
 from app.storage.workspaces import WorkspaceRepository
+from app.utils.time import utc_now
 
 
 DEFAULT_RAW_ROOT = REPO_ROOT / "data" / "workspaces"
@@ -284,6 +285,34 @@ class Application:
                 evidence_ids=tuple(data.get("evidence_ids", [])),
             )
             return self._json_response(200, serialize_entity(candidate))
+        if method == "POST" and path == "/api/sources":
+            data = _read_json(environ)
+            source = self.ctx.source_import_service.import_source(
+                SourceImportRequest(
+                    workspace_id=data["workspace_id"],
+                    source_type=SourceType(data["source_type"]),
+                    title=data["title"],
+                    origin=data["origin"],
+                    content=data["content"],
+                    imported_at=datetime.fromisoformat(data.get("imported_at") or utc_now().isoformat()),
+                    privacy_level=data.get("privacy_level"),
+                    tags=tuple(data.get("tags", [])),
+                )
+            )
+            return self._json_response(200, serialize_entity(source))
+        if method == "POST" and path == "/api/compile-jobs":
+            data = _read_json(environ)
+            result = self.ctx.compile_service.compile_source(
+                data["source_id"],
+                requested_at=datetime.fromisoformat(data.get("requested_at") or utc_now().isoformat()),
+            )
+            return self._json_response(
+                200,
+                {
+                    "job": serialize_entity(result.job),
+                    "nodes": [serialize_entity(node) for node in result.nodes],
+                },
+            )
         raise KeyError(path)
 
     def _handle_ui(
@@ -298,6 +327,8 @@ class Application:
         workspace_id = _single(query, "workspace_id", default=self._default_workspace_id())
         if path == "/dashboard":
             html_body = self._dashboard_page(workspace_id)
+        elif path == "/inbox":
+            html_body = self._inbox_page(workspace_id)
         elif path == "/knowledge":
             html_body = self._knowledge_page(workspace_id)
         elif path == "/passport":
@@ -321,10 +352,10 @@ class Application:
         data = _read_form(environ)
         workspace_id = data.get("workspace_id") or self._default_workspace_id()
         if path == "/actions/generate-passport":
-            self.ctx.passport_service.generate_for_workspace(workspace_id, recorded_at=datetime.utcnow())
+            self.ctx.passport_service.generate_for_workspace(workspace_id, recorded_at=utc_now())
             return self._redirect(f"/passport?workspace_id={workspace_id}")
         if path == "/actions/issue-default-visa":
-            self.ctx.mount_service.issue_default_passport_visa(workspace_id, expiry_at=datetime.utcnow() + timedelta(hours=1))
+            self.ctx.mount_service.issue_default_passport_visa(workspace_id, expiry_at=utc_now() + timedelta(hours=1))
             return self._redirect(f"/mount?workspace_id={workspace_id}")
         if path == "/actions/revoke-visa":
             self.ctx.mount_service.revoke_visa(data["visa_id"], actor="operator")
@@ -338,6 +369,22 @@ class Application:
         if path == "/actions/export-workspace":
             self.ctx.export_restore_service.export_workspace(workspace_id, include_hidden=False)
             return self._redirect(f"/settings?workspace_id={workspace_id}")
+        if path == "/actions/import-source":
+            self.ctx.source_import_service.import_source(
+                SourceImportRequest(
+                    workspace_id=workspace_id,
+                    source_type=SourceType(data.get("source_type", SourceType.MARKDOWN.value)),
+                    title=data["title"],
+                    origin=data.get("origin") or data["title"].lower().replace(" ", "_"),
+                    content=data["content"],
+                    imported_at=utc_now(),
+                    privacy_level=data.get("privacy_level") or None,
+                )
+            )
+            return self._redirect(f"/inbox?workspace_id={workspace_id}")
+        if path == "/actions/compile-source":
+            self.ctx.compile_service.compile_source(data["source_id"], requested_at=utc_now())
+            return self._redirect(f"/inbox?workspace_id={workspace_id}")
         raise KeyError(path)
 
     def _dashboard_page(self, workspace_id: str) -> str:
@@ -372,7 +419,7 @@ class Application:
         nodes = self.ctx.compile_service.nodes.list_by_workspace(workspace_id)
         signals = self.ctx.signal_service.generate_for_workspace(workspace_id).capability_signals
         patterns = self.ctx.signal_service.generate_for_workspace(workspace_id).mistake_patterns
-        postcards = self.ctx.postcard_service.generate_for_workspace(workspace_id, recorded_at=datetime.utcnow())
+        postcards = self.ctx.postcard_service.generate_for_workspace(workspace_id, recorded_at=utc_now())
         body = "<section class='hero'><p class='eyebrow'>Knowledge</p><h1>Compiled Knowledge</h1></section>"
         body += "<section class='grid'>"
         body += "<article class='panel'><h2>Nodes</h2>" + "".join(
@@ -391,7 +438,7 @@ class Application:
         return _page("Knowledge", body)
 
     def _passport_page(self, workspace_id: str) -> str:
-        view = self.ctx.passport_service.generate_for_workspace(workspace_id, recorded_at=datetime.utcnow())
+        view = self.ctx.passport_service.generate_for_workspace(workspace_id, recorded_at=utc_now())
         body = f"""
         <section class="hero">
           <p class="eyebrow">Passport</p>
@@ -426,6 +473,34 @@ class Application:
         </section>
         """
         return _page("Mount", body)
+
+    def _inbox_page(self, workspace_id: str) -> str:
+        items = self.ctx.inbox_service.list_items(workspace_id=workspace_id)
+        body = f"""
+        <section class="hero">
+          <p class="eyebrow">Inbox</p>
+          <h1>Source Intake and Compile Queue</h1>
+          <form method="post" action="/actions/import-source" class="stacked">
+            <input type="hidden" name="workspace_id" value="{_e(workspace_id)}" />
+            <input name="title" placeholder="Source title" required />
+            <input name="origin" placeholder="Origin or filename" />
+            <select name="source_type">
+              <option value="markdown">Markdown</option>
+              <option value="plain_text">Plain text</option>
+              <option value="web_page">Web page</option>
+              <option value="pdf">PDF text</option>
+              <option value="project_document">Project document</option>
+            </select>
+            <textarea name="content" placeholder="Paste imported content here" required></textarea>
+            <button type="submit">Import Source</button>
+          </form>
+        </section>
+        <section class="panel">
+          <h2>Inbox Items</h2>
+          {"".join(self._inbox_item_card(item) for item in items) or "<p>No imports yet.</p>"}
+        </section>
+        """
+        return _page("Inbox", body)
 
     def _review_page(self) -> str:
         candidates = self.ctx.review_service.candidates.list_all()
@@ -489,6 +564,21 @@ class Application:
             """
         return f"<div class='item'><strong>{_e(visa.id)}</strong><p>{_e(visa.status.value)} / {', '.join(permission.value for permission in visa.permission_levels)}</p>{revoke}</div>"
 
+    def _inbox_item_card(self, item) -> str:
+        preview = self.ctx.inbox_service.preview(item.source_id)
+        return f"""
+        <div class='item'>
+          <strong>{_e(item.title)}</strong>
+          <p>{_e(item.source_type)} / {_e(item.compile_status.value)}</p>
+          <pre>{_e(preview.raw_content[:400])}</pre>
+          <form method="post" action="/actions/compile-source">
+            <input type="hidden" name="source_id" value="{_e(item.source_id)}" />
+            <input type="hidden" name="workspace_id" value="{_e(item.workspace_id)}" />
+            <button type="submit">{'Recompile' if item.compile_status.value in ('failed', 'succeeded') else 'Compile'}</button>
+          </form>
+        </div>
+        """
+
     def _default_workspace_id(self) -> str:
         workspaces = self.ctx.workspace_service.list_workspaces()
         if not workspaces:
@@ -513,6 +603,7 @@ def _page(title: str, body: str) -> str:
     nav = """
     <nav class="nav">
       <a href="/dashboard">Dashboard</a>
+      <a href="/inbox">Inbox</a>
       <a href="/knowledge">Knowledge</a>
       <a href="/passport">Passport</a>
       <a href="/mount">Mount</a>
@@ -539,6 +630,9 @@ def _page(title: str, body: str) -> str:
       .item:first-child { border-top:none; padding-top:0; }
       button { border:none; border-radius:999px; padding:10px 16px; background:var(--accent); color:white; font-weight:600; cursor:pointer; }
       form { display:inline-block; margin-right:8px; margin-top:8px; }
+      .stacked { display:grid; gap:10px; max-width:720px; }
+      input, select, textarea { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:14px; background:#fffaf3; font:inherit; }
+      textarea { min-height:160px; }
       pre { white-space:pre-wrap; word-break:break-word; background:#f8f1e7; padding:12px; border-radius:16px; font-family:'SFMono-Regular',Menlo,monospace; font-size:12px; }
       @media (max-width: 720px) { h1 { font-size:34px; } .nav { overflow:auto; } }
     </style>

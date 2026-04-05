@@ -24,6 +24,7 @@ from app.storage.mount_sessions import MountSessionRepository
 from app.storage.passports import PassportRepository
 from app.storage.postcards import PostcardRepository
 from app.storage.visas import VisaBundleRepository
+from app.utils.time import utc_now
 
 
 class AuthorizationError(PermissionError):
@@ -223,7 +224,7 @@ class MountService:
             actor=actor,
             action=action,
             object_id=object_id,
-            timestamp=datetime.utcnow(),
+            timestamp=utc_now(),
             result="success",
             meta=meta,
         )

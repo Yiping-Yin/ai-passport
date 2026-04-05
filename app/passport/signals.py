@@ -11,6 +11,7 @@ from app.domain import CapabilitySignal, FocusCard, FocusStatus, MistakePattern,
 from app.storage.capability_signals import CapabilitySignalRepository
 from app.storage.focus_cards import FocusCardRepository
 from app.storage.mistake_patterns import MistakePatternRepository
+from app.utils.time import utc_now
 
 
 @dataclass(frozen=True, slots=True)
@@ -128,7 +129,7 @@ class FocusCardService:
             workspace_id=workspace_id,
         )
         if card.status is FocusStatus.ACTIVE:
-            self.repository.archive_other_active(workspace_id, keep_id=card.id, now=datetime.utcnow())
+            self.repository.archive_other_active(workspace_id, keep_id=card.id, now=utc_now())
         return self.repository.create(card)
 
     def update_focus_card(
@@ -158,7 +159,7 @@ class FocusCardService:
             workspace_id=current.workspace_id,
         )
         if updated.status is FocusStatus.ACTIVE:
-            self.repository.archive_other_active(updated.workspace_id, keep_id=updated.id, now=datetime.utcnow())
+            self.repository.archive_other_active(updated.workspace_id, keep_id=updated.id, now=utc_now())
         return self.repository.update(updated)
 
     def active_focus(self, workspace_id: str) -> FocusCard | None:

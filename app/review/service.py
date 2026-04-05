@@ -26,6 +26,7 @@ from app.storage.sources import SourceRepository
 from app.storage.sqlite import insert_record
 from app.storage.visas import VisaBundleRepository
 from app.storage.workspaces import WorkspaceRepository
+from app.utils.time import utc_now
 
 
 @dataclass(frozen=True, slots=True)
@@ -174,7 +175,7 @@ class ReviewService:
                         field_name=field_name,
                         value=payload[field_name],
                         editor="review",
-                        edited_at=datetime.utcnow(),
+                        edited_at=utc_now(),
                     )
         elif target_type == "focus_card":
             current = self.focus.get(target_id)
@@ -211,7 +212,7 @@ class ReviewService:
                 version=postcard.version + 1,
                 workspace_id=postcard.workspace_id,
             )
-            self.postcards.upsert(updated, recorded_at=datetime.utcnow())
+            self.postcards.upsert(updated, recorded_at=utc_now())
         else:
             raise ValueError(f"Unsupported candidate target: {candidate.target_object}")
 
@@ -272,7 +273,7 @@ class ReviewService:
             actor=actor,
             action=action,
             object_id=object_id,
-            timestamp=datetime.utcnow(),
+            timestamp=utc_now(),
             result="success",
             meta=meta,
         )
@@ -424,7 +425,7 @@ class ExportRestoreService:
                 actor="system",
                 action="export_workspace",
                 object_id=workspace_id,
-                timestamp=datetime.utcnow(),
+                timestamp=utc_now(),
                 result="success",
                 meta={"path": str(path), "include_hidden": include_hidden, "workspace_id": workspace_id},
             )
@@ -479,7 +480,7 @@ class ExportRestoreService:
                 actor="system",
                 action="restore_workspace",
                 object_id=payload["workspace"]["id"],
-                timestamp=datetime.utcnow(),
+                timestamp=utc_now(),
                 result="success",
                 meta={"path": str(path), "workspace_id": payload["workspace"]["id"]},
             )

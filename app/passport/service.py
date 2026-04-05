@@ -13,6 +13,7 @@ from app.storage.mistake_patterns import MistakePatternRepository
 from app.storage.passports import PassportRepository
 from app.storage.postcards import PostcardRepository
 from app.storage.workspaces import WorkspaceRepository
+from app.utils.time import utc_now
 
 
 @dataclass(frozen=True, slots=True)
@@ -261,7 +262,7 @@ class PassportService:
             workspace_type=workspace.workspace_type,
             title=workspace.title,
             created_at=workspace.created_at,
-            updated_at=datetime.utcnow(),
+            updated_at=utc_now(),
             description=workspace.description,
             tags=workspace.tags,
             privacy_default=workspace.privacy_default,
