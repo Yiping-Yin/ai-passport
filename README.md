@@ -29,6 +29,9 @@ This repo follows the implementation guide's local-first defaults:
 - `docs/spec/domain-serialization.md`: transport mapping for domain objects
 - `scripts/seed_github.py`: parse backlog, validate counts, and seed GitHub
 - `scripts/dev.py`: local lint, typecheck, test, migrate, and CI commands
+- `app/api/workspaces.py`: workspace CRUD, active-workspace state, and readiness placeholder service
+- `app/ingest/service.py`: source intake and raw-source preservation
+- `app/ingest/inbox.py`: inbox projection, compile jobs, preview, and recompile behavior
 
 ## Local Commands
 

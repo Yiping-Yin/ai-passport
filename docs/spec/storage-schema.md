@@ -25,6 +25,7 @@ Last updated: 2026-04-06
 | `visa_bundles` | Scoped read permissions | `workspace_id -> workspaces.id` |
 | `mount_sessions` | External AI session trail | `visa_id -> visa_bundles.id` |
 | `review_candidates` | AI writeback candidates | `session_id -> mount_sessions.id` |
+| `compile_jobs` | Inbox compile attempts and retry history | `source_id -> sources.id`, `workspace_id -> workspaces.id` |
 | `audit_logs` | Append-only governance trail | Polymorphic `object_id` reference |
 | `schema_migrations` | Applied migration history | Managed by the migration runner |
 
@@ -34,6 +35,7 @@ Last updated: 2026-04-06
 - Array-like fields and nested objects are stored as JSON text columns.
 - Foreign keys are used where the relation is concrete and non-polymorphic.
 - `review_candidates.target_object` and `audit_logs.object_id` remain polymorphic references and are kept as text identifiers.
+- `compile_jobs` stores the latest inbox state using `queued`, `running`, `succeeded`, and `failed`; inbox projection maps missing jobs to `not_started`.
 
 ## Seed Baseline
 

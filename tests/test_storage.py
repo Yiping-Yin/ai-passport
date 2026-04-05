@@ -15,7 +15,13 @@ class StorageTests(unittest.TestCase):
         with TemporaryDirectory() as tmpdir:
             db_path = Path(tmpdir) / "test.sqlite3"
             applied = migrate_up(db_path)
-            self.assertEqual(applied, ["202604061600__initial_schema.sql"])
+            self.assertEqual(
+                applied,
+                [
+                    "202604061600__initial_schema.sql",
+                    "202604061730__compile_jobs.sql",
+                ],
+            )
 
             connection = sqlite3.connect(db_path)
             try:
@@ -31,7 +37,10 @@ class StorageTests(unittest.TestCase):
                 connection.close()
 
             rolled_back = migrate_down(db_path)
-            self.assertEqual(rolled_back, "202604061600__initial_schema.sql")
+            self.assertEqual(rolled_back, "202604061730__compile_jobs.sql")
+
+            rolled_back_again = migrate_down(db_path)
+            self.assertEqual(rolled_back_again, "202604061600__initial_schema.sql")
 
             connection = sqlite3.connect(db_path)
             try:
@@ -42,6 +51,7 @@ class StorageTests(unittest.TestCase):
                     ).fetchall()
                 }
                 self.assertNotIn("workspaces", table_names)
+                self.assertNotIn("compile_jobs", table_names)
                 self.assertIn("schema_migrations", table_names)
             finally:
                 connection.close()

@@ -90,3 +90,11 @@ class AccessMode(StrEnum):
 
 class WritebackPolicy(StrEnum):
     REVIEW_REQUIRED = "review_required"
+
+
+class CompileJobStatus(StrEnum):
+    NOT_STARTED = "not_started"
+    QUEUED = "queued"
+    RUNNING = "running"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"

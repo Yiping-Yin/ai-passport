@@ -19,10 +19,12 @@ The following records are versioned and must serialize with `version >= 1`:
 - `Passport`
 - `VisaBundle`
 - `ReviewCandidate`
+- `CompileJob.attempt_number`
 
 ## Transport Assumptions
 
 - `Workspace`, `Source`, `FocusCard`, `MountSession`, and `AuditLog` keep stable object IDs and explicit timestamps.
+- `CompileJob.status` serializes as one of `not_started`, `queued`, `running`, `succeeded`, or `failed`.
 - `VisaBundle.permission_levels` is serialized as a list of stable permission strings: `passport_read`, `topic_read`, `writeback_candidate`.
 - `AccessMode` is serialized as either `read_only` or `candidate_writeback`.
 - `WritebackPolicy` is serialized as `review_required`; there is intentionally no auto-merge value.

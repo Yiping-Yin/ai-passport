@@ -11,6 +11,7 @@ from app.domain.enums import (
     CandidateStatus,
     CandidateType,
     CardType,
+    CompileJobStatus,
     FocusStatus,
     NodeType,
     PassportReadiness,
@@ -304,3 +305,22 @@ class AuditLog:
         ensure_non_empty("audit_log.action", self.action)
         ensure_non_empty("audit_log.object_id", self.object_id)
         ensure_non_empty("audit_log.result", self.result)
+
+
+@dataclass(frozen=True, slots=True)
+class CompileJob:
+    id: str
+    source_id: str
+    workspace_id: str
+    status: CompileJobStatus
+    requested_at: datetime
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+    last_error: str | None = None
+    attempt_number: int = 1
+
+    def __post_init__(self) -> None:
+        ensure_non_empty("compile_job.id", self.id)
+        ensure_non_empty("compile_job.source_id", self.source_id)
+        ensure_non_empty("compile_job.workspace_id", self.workspace_id)
+        ensure_version("compile_job.attempt_number", self.attempt_number)
