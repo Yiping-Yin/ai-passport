@@ -78,6 +78,10 @@ def gh_api(path: str, *, method: str = "GET", fields: dict[str, Any] | None = No
         cmd.extend(["-X", method])
     if fields:
         for key, value in fields.items():
+            if isinstance(value, list):
+                for item in value:
+                    cmd.extend(["-f", f"{key}[]={item}"])
+                continue
             if isinstance(value, bool):
                 value = "true" if value else "false"
             elif isinstance(value, (dict, list)):
@@ -397,8 +401,8 @@ def ensure_epics_and_tickets(repo: str, manifest: dict[str, Any], milestones: di
     return epic_issues, ticket_issues
 
 
-def can_manage_projects() -> tuple[bool, str | None]:
-    result = run(["gh", "project", "list", "--owner", "Yiping-Yin"], check=False)
+def can_manage_projects(owner: str) -> tuple[bool, str | None]:
+    result = run(["gh", "project", "list", "--owner", owner], check=False)
     if result.returncode == 0:
         return True, None
     message = (result.stderr or result.stdout).strip()
@@ -406,7 +410,7 @@ def can_manage_projects() -> tuple[bool, str | None]:
 
 
 def ensure_project(repo: str, state: dict[str, Any], owner: str, all_issue_numbers: list[int]) -> None:
-    ok, reason = can_manage_projects()
+    ok, reason = can_manage_projects(owner)
     if not ok:
         state["warnings"].append(f"Project provisioning skipped: {reason}")
         return

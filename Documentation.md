@@ -12,6 +12,7 @@ python3 scripts/seed_github.py --repo Yiping-Yin/ai-passport --seed
 
 ```bash
 gh auth status
+gh auth refresh -s read:project
 gh repo view Yiping-Yin/ai-passport --json name,visibility,url,defaultBranchRef
 gh issue list --repo Yiping-Yin/ai-passport --limit 200
 gh api repos/Yiping-Yin/ai-passport/milestones?state=all&per_page=100

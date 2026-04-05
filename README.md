@@ -36,3 +36,9 @@ The script writes:
 
 - `state/backlog-manifest.json`: parsed backlog structure
 - `state/github-import-manifest.json`: created GitHub artifact IDs and URLs
+
+If you want the script to provision a GitHub Project as well, refresh the CLI token first:
+
+```bash
+gh auth refresh -s read:project
+```

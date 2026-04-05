@@ -1,9 +1,720 @@
 {
-  "repo": null,
-  "labels": {},
-  "milestones": {},
-  "epics": {},
-  "tickets": {},
+  "epics": {
+    "Epic 1. Foundations and Domain Contracts": {
+      "number": 1,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/1"
+    },
+    "Epic 2. Workspace, Inbox, and Source Intake": {
+      "number": 2,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/2"
+    },
+    "Epic 3. Compilation Core and Evidence Traceability": {
+      "number": 3,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/3"
+    },
+    "Epic 4. Capability Signals, Mistake Patterns, and Focus Layer": {
+      "number": 4,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/4"
+    },
+    "Epic 5. Postcards and Passport": {
+      "number": 5,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/5"
+    },
+    "Epic 6. Mounting, Visa Bundles, and Session Control": {
+      "number": 6,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/6"
+    },
+    "Epic 7. Review Queue, Audit, Export, and Recovery": {
+      "number": 7,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/7"
+    },
+    "Epic 8. Thin UI, Quality Gates, and Pilot Readiness": {
+      "number": 8,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/8"
+    }
+  },
+  "labels": {
+    "area:compiler-evidence": {
+      "color": "0366d6",
+      "name": "area:compiler-evidence",
+      "url": "https://api.github.com/repos/Yiping-Yin/ai-passport/labels/area:compiler-evidence"
+    },
+    "area:foundations": {
+      "color": "1d76db",
+      "name": "area:foundations",
+      "url": "https://api.github.com/repos/Yiping-Yin/ai-passport/labels/area:foundations"
+    },
+    "area:mounting-access": {
+      "color": "d93f0b",
+      "name": "area:mounting-access",
+      "url": "https://api.github.com/repos/Yiping-Yin/ai-passport/labels/area:mounting-access"
+    },
+    "area:pilot-readiness": {
+      "color": "0e8a16",
+      "name": "area:pilot-readiness",
+      "url": "https://api.github.com/repos/Yiping-Yin/ai-passport/labels/area:pilot-readiness"
+    },
+    "area:postcards-passport": {
+      "color": "fbca04",
+      "name": "area:postcards-passport",
+      "url": "https://api.github.com/repos/Yiping-Yin/ai-passport/labels/area:postcards-passport"
+    },
+    "area:review-governance": {
+      "color": "b60205",
+      "name": "area:review-governance",
+      "url": "https://api.github.com/repos/Yiping-Yin/ai-passport/labels/area:review-governance"
+    },
+    "area:signals-focus": {
+      "color": "5319e7",
+      "name": "area:signals-focus",
+      "url": "https://api.github.com/repos/Yiping-Yin/ai-passport/labels/area:signals-focus"
+    },
+    "area:workspace-intake": {
+      "color": "0052cc",
+      "name": "area:workspace-intake",
+      "url": "https://api.github.com/repos/Yiping-Yin/ai-passport/labels/area:workspace-intake"
+    },
+    "blocked": {
+      "color": "000000",
+      "name": "blocked",
+      "url": "https://api.github.com/repos/Yiping-Yin/ai-passport/labels/blocked"
+    },
+    "type:epic": {
+      "color": "5319e7",
+      "name": "type:epic",
+      "url": "https://api.github.com/repos/Yiping-Yin/ai-passport/labels/type:epic"
+    },
+    "type:ticket": {
+      "color": "0e8a16",
+      "name": "type:ticket",
+      "url": "https://api.github.com/repos/Yiping-Yin/ai-passport/labels/type:ticket"
+    }
+  },
+  "milestones": {
+    "Milestone 1.1 \u2014 Repository reconnaissance and architecture baseline": {
+      "description": "The team understands the real repo and freezes the initial execution plan. Parent epic: Epic 1. Foundations and Domain Contracts.",
+      "number": 1,
+      "url": "https://github.com/Yiping-Yin/ai-passport/milestone/1"
+    },
+    "Milestone 1.2 \u2014 Core domain entities and invariants": {
+      "description": "The canonical entity set and invariants are defined in code. Parent epic: Epic 1. Foundations and Domain Contracts.",
+      "number": 2,
+      "url": "https://github.com/Yiping-Yin/ai-passport/milestone/2"
+    },
+    "Milestone 1.3 \u2014 Persistence schema, migrations, and seed workspace": {
+      "description": "The data model exists in storage with initial seed data. Parent epic: Epic 1. Foundations and Domain Contracts.",
+      "number": 3,
+      "url": "https://github.com/Yiping-Yin/ai-passport/milestone/3"
+    },
+    "Milestone 2.1 \u2014 Workspace lifecycle and onboarding": {
+      "description": "Users can create isolated workspaces and begin cold start. Parent epic: Epic 2. Workspace, Inbox, and Source Intake.",
+      "number": 4,
+      "url": "https://github.com/Yiping-Yin/ai-passport/milestone/4"
+    },
+    "Milestone 2.2 \u2014 Source intake and raw preservation": {
+      "description": "Raw inputs are ingested, stored, and never overwritten. Parent epic: Epic 2. Workspace, Inbox, and Source Intake.",
+      "number": 5,
+      "url": "https://github.com/Yiping-Yin/ai-passport/milestone/5"
+    },
+    "Milestone 2.3 \u2014 Inbox operations and compile trigger": {
+      "description": "Imported items appear in Inbox and can be compiled or retried. Parent epic: Epic 2. Workspace, Inbox, and Source Intake.",
+      "number": 6,
+      "url": "https://github.com/Yiping-Yin/ai-passport/milestone/6"
+    },
+    "Milestone 3.1 \u2014 Knowledge node generation": {
+      "description": "The system can create foundational topic/project/method/question nodes. Parent epic: Epic 3. Compilation Core and Evidence Traceability.",
+      "number": 7,
+      "url": "https://github.com/Yiping-Yin/ai-passport/milestone/7"
+    },
+    "Milestone 3.2 \u2014 Evidence fragment extraction and linkage": {
+      "description": "Every high-level object can point back to source evidence. Parent epic: Epic 3. Compilation Core and Evidence Traceability.",
+      "number": 8,
+      "url": "https://github.com/Yiping-Yin/ai-passport/milestone/8"
+    },
+    "Milestone 3.3 \u2014 Human reviewability of compile output": {
+      "description": "Users can inspect and correct derived knowledge. Parent epic: Epic 3. Compilation Core and Evidence Traceability.",
+      "number": 9,
+      "url": "https://github.com/Yiping-Yin/ai-passport/milestone/9"
+    },
+    "Milestone 4.1 \u2014 Capability signal generation": {
+      "description": "The system emits evidence-backed capability signals. Parent epic: Epic 4. Capability Signals, Mistake Patterns, and Focus Layer.",
+      "number": 10,
+      "url": "https://github.com/Yiping-Yin/ai-passport/milestone/10"
+    },
+    "Milestone 4.2 \u2014 Mistake pattern generation and controls": {
+      "description": "The system can detect and manage recurring mistake patterns. Parent epic: Epic 4. Capability Signals, Mistake Patterns, and Focus Layer.",
+      "number": 11,
+      "url": "https://github.com/Yiping-Yin/ai-passport/milestone/11"
+    },
+    "Milestone 4.3 \u2014 Focus Card lifecycle": {
+      "description": "The system can represent what the user is currently trying to solve. Parent epic: Epic 4. Capability Signals, Mistake Patterns, and Focus Layer.",
+      "number": 12,
+      "url": "https://github.com/Yiping-Yin/ai-passport/milestone/12"
+    },
+    "Milestone 5.1 \u2014 Postcard generation": {
+      "description": "The system can generate versioned topic-level Postcards. Parent epic: Epic 5. Postcards and Passport.",
+      "number": 13,
+      "url": "https://github.com/Yiping-Yin/ai-passport/milestone/13"
+    },
+    "Milestone 5.2 \u2014 Postcard updates and version review": {
+      "description": "Postcards evolve safely as the knowledge base changes. Parent epic: Epic 5. Postcards and Passport.",
+      "number": 14,
+      "url": "https://github.com/Yiping-Yin/ai-passport/milestone/14"
+    },
+    "Milestone 5.3 \u2014 Passport manifest generation": {
+      "description": "The system can generate a compact human-readable and machine-readable Passport. Parent epic: Epic 5. Postcards and Passport.",
+      "number": 15,
+      "url": "https://github.com/Yiping-Yin/ai-passport/milestone/15"
+    },
+    "Milestone 6.1 \u2014 Passport-first mount flow": {
+      "description": "External AI can begin with Passport, representative Postcards, and active Focus only. Parent epic: Epic 6. Mounting, Visa Bundles, and Session Control.",
+      "number": 16,
+      "url": "https://github.com/Yiping-Yin/ai-passport/milestone/16"
+    },
+    "Milestone 6.2 \u2014 Visa Bundles and topic-level access": {
+      "description": "Deeper reads are permissioned through explicit scope packages. Parent epic: Epic 6. Mounting, Visa Bundles, and Session Control.",
+      "number": 17,
+      "url": "https://github.com/Yiping-Yin/ai-passport/milestone/17"
+    },
+    "Milestone 6.3 \u2014 Mount sessions and access logs": {
+      "description": "Every external AI interaction is captured and traceable. Parent epic: Epic 6. Mounting, Visa Bundles, and Session Control.",
+      "number": 18,
+      "url": "https://github.com/Yiping-Yin/ai-passport/milestone/18"
+    },
+    "Milestone 7.1 \u2014 Review Queue ingestion and candidate model": {
+      "description": "External AI outputs become reviewable candidates instead of canonical writes. Parent epic: Epic 7. Review Queue, Audit, Export, and Recovery.",
+      "number": 19,
+      "url": "https://github.com/Yiping-Yin/ai-passport/milestone/19"
+    },
+    "Milestone 7.2 \u2014 Review actions and diff visibility": {
+      "description": "Users can review, edit, and decide whether a candidate becomes part of the knowledge base. Parent epic: Epic 7. Review Queue, Audit, Export, and Recovery.",
+      "number": 20,
+      "url": "https://github.com/Yiping-Yin/ai-passport/milestone/20"
+    },
+    "Milestone 7.3 \u2014 Audit, export, backup, and restore": {
+      "description": "Users can inspect history and retain data sovereignty. Parent epic: Epic 7. Review Queue, Audit, Export, and Recovery.",
+      "number": 21,
+      "url": "https://github.com/Yiping-Yin/ai-passport/milestone/21"
+    },
+    "Milestone 8.1 \u2014 Thin operator UI": {
+      "description": "Users can complete the end-to-end flow through a minimal but coherent interface. Parent epic: Epic 8. Thin UI, Quality Gates, and Pilot Readiness.",
+      "number": 22,
+      "url": "https://github.com/Yiping-Yin/ai-passport/milestone/22"
+    },
+    "Milestone 8.2 \u2014 Benchmarks, traceability tests, and guardrails": {
+      "description": "The team can verify compile quality and trust boundaries repeatedly. Parent epic: Epic 8. Thin UI, Quality Gates, and Pilot Readiness.",
+      "number": 23,
+      "url": "https://github.com/Yiping-Yin/ai-passport/milestone/23"
+    },
+    "Milestone 8.3 \u2014 Release gates and pilot instrumentation": {
+      "description": "The product is ready for real-user validation. Parent epic: Epic 8. Thin UI, Quality Gates, and Pilot Readiness.",
+      "number": 24,
+      "url": "https://github.com/Yiping-Yin/ai-passport/milestone/24"
+    }
+  },
   "project": null,
-  "warnings": []
+  "repo": "Yiping-Yin/ai-passport",
+  "tickets": {
+    "E1-M1-T01": {
+      "epic": "Epic 1. Foundations and Domain Contracts",
+      "milestone": "Milestone 1.1 \u2014 Repository reconnaissance and architecture baseline",
+      "number": 9,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/9"
+    },
+    "E1-M1-T02": {
+      "epic": "Epic 1. Foundations and Domain Contracts",
+      "milestone": "Milestone 1.1 \u2014 Repository reconnaissance and architecture baseline",
+      "number": 10,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/10"
+    },
+    "E1-M1-T03": {
+      "epic": "Epic 1. Foundations and Domain Contracts",
+      "milestone": "Milestone 1.1 \u2014 Repository reconnaissance and architecture baseline",
+      "number": 11,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/11"
+    },
+    "E1-M1-T04": {
+      "epic": "Epic 1. Foundations and Domain Contracts",
+      "milestone": "Milestone 1.1 \u2014 Repository reconnaissance and architecture baseline",
+      "number": 12,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/12"
+    },
+    "E1-M2-T01": {
+      "epic": "Epic 1. Foundations and Domain Contracts",
+      "milestone": "Milestone 1.2 \u2014 Core domain entities and invariants",
+      "number": 13,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/13"
+    },
+    "E1-M2-T02": {
+      "epic": "Epic 1. Foundations and Domain Contracts",
+      "milestone": "Milestone 1.2 \u2014 Core domain entities and invariants",
+      "number": 14,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/14"
+    },
+    "E1-M2-T03": {
+      "epic": "Epic 1. Foundations and Domain Contracts",
+      "milestone": "Milestone 1.2 \u2014 Core domain entities and invariants",
+      "number": 15,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/15"
+    },
+    "E1-M2-T04": {
+      "epic": "Epic 1. Foundations and Domain Contracts",
+      "milestone": "Milestone 1.2 \u2014 Core domain entities and invariants",
+      "number": 16,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/16"
+    },
+    "E1-M3-T01": {
+      "epic": "Epic 1. Foundations and Domain Contracts",
+      "milestone": "Milestone 1.3 \u2014 Persistence schema, migrations, and seed workspace",
+      "number": 17,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/17"
+    },
+    "E1-M3-T02": {
+      "epic": "Epic 1. Foundations and Domain Contracts",
+      "milestone": "Milestone 1.3 \u2014 Persistence schema, migrations, and seed workspace",
+      "number": 18,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/18"
+    },
+    "E1-M3-T03": {
+      "epic": "Epic 1. Foundations and Domain Contracts",
+      "milestone": "Milestone 1.3 \u2014 Persistence schema, migrations, and seed workspace",
+      "number": 19,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/19"
+    },
+    "E1-M3-T04": {
+      "epic": "Epic 1. Foundations and Domain Contracts",
+      "milestone": "Milestone 1.3 \u2014 Persistence schema, migrations, and seed workspace",
+      "number": 20,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/20"
+    },
+    "E2-M1-T01": {
+      "epic": "Epic 2. Workspace, Inbox, and Source Intake",
+      "milestone": "Milestone 2.1 \u2014 Workspace lifecycle and onboarding",
+      "number": 21,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/21"
+    },
+    "E2-M1-T02": {
+      "epic": "Epic 2. Workspace, Inbox, and Source Intake",
+      "milestone": "Milestone 2.1 \u2014 Workspace lifecycle and onboarding",
+      "number": 22,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/22"
+    },
+    "E2-M1-T03": {
+      "epic": "Epic 2. Workspace, Inbox, and Source Intake",
+      "milestone": "Milestone 2.1 \u2014 Workspace lifecycle and onboarding",
+      "number": 23,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/23"
+    },
+    "E2-M2-T01": {
+      "epic": "Epic 2. Workspace, Inbox, and Source Intake",
+      "milestone": "Milestone 2.2 \u2014 Source intake and raw preservation",
+      "number": 24,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/24"
+    },
+    "E2-M2-T02": {
+      "epic": "Epic 2. Workspace, Inbox, and Source Intake",
+      "milestone": "Milestone 2.2 \u2014 Source intake and raw preservation",
+      "number": 25,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/25"
+    },
+    "E2-M2-T03": {
+      "epic": "Epic 2. Workspace, Inbox, and Source Intake",
+      "milestone": "Milestone 2.2 \u2014 Source intake and raw preservation",
+      "number": 26,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/26"
+    },
+    "E2-M2-T04": {
+      "epic": "Epic 2. Workspace, Inbox, and Source Intake",
+      "milestone": "Milestone 2.2 \u2014 Source intake and raw preservation",
+      "number": 27,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/27"
+    },
+    "E2-M3-T01": {
+      "epic": "Epic 2. Workspace, Inbox, and Source Intake",
+      "milestone": "Milestone 2.3 \u2014 Inbox operations and compile trigger",
+      "number": 28,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/28"
+    },
+    "E2-M3-T02": {
+      "epic": "Epic 2. Workspace, Inbox, and Source Intake",
+      "milestone": "Milestone 2.3 \u2014 Inbox operations and compile trigger",
+      "number": 29,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/29"
+    },
+    "E2-M3-T03": {
+      "epic": "Epic 2. Workspace, Inbox, and Source Intake",
+      "milestone": "Milestone 2.3 \u2014 Inbox operations and compile trigger",
+      "number": 30,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/30"
+    },
+    "E2-M3-T04": {
+      "epic": "Epic 2. Workspace, Inbox, and Source Intake",
+      "milestone": "Milestone 2.3 \u2014 Inbox operations and compile trigger",
+      "number": 31,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/31"
+    },
+    "E3-M1-T01": {
+      "epic": "Epic 3. Compilation Core and Evidence Traceability",
+      "milestone": "Milestone 3.1 \u2014 Knowledge node generation",
+      "number": 32,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/32"
+    },
+    "E3-M1-T02": {
+      "epic": "Epic 3. Compilation Core and Evidence Traceability",
+      "milestone": "Milestone 3.1 \u2014 Knowledge node generation",
+      "number": 33,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/33"
+    },
+    "E3-M1-T03": {
+      "epic": "Epic 3. Compilation Core and Evidence Traceability",
+      "milestone": "Milestone 3.1 \u2014 Knowledge node generation",
+      "number": 34,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/34"
+    },
+    "E3-M2-T01": {
+      "epic": "Epic 3. Compilation Core and Evidence Traceability",
+      "milestone": "Milestone 3.2 \u2014 Evidence fragment extraction and linkage",
+      "number": 35,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/35"
+    },
+    "E3-M2-T02": {
+      "epic": "Epic 3. Compilation Core and Evidence Traceability",
+      "milestone": "Milestone 3.2 \u2014 Evidence fragment extraction and linkage",
+      "number": 36,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/36"
+    },
+    "E3-M2-T03": {
+      "epic": "Epic 3. Compilation Core and Evidence Traceability",
+      "milestone": "Milestone 3.2 \u2014 Evidence fragment extraction and linkage",
+      "number": 37,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/37"
+    },
+    "E3-M3-T01": {
+      "epic": "Epic 3. Compilation Core and Evidence Traceability",
+      "milestone": "Milestone 3.3 \u2014 Human reviewability of compile output",
+      "number": 38,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/38"
+    },
+    "E3-M3-T02": {
+      "epic": "Epic 3. Compilation Core and Evidence Traceability",
+      "milestone": "Milestone 3.3 \u2014 Human reviewability of compile output",
+      "number": 39,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/39"
+    },
+    "E3-M3-T03": {
+      "epic": "Epic 3. Compilation Core and Evidence Traceability",
+      "milestone": "Milestone 3.3 \u2014 Human reviewability of compile output",
+      "number": 40,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/40"
+    },
+    "E4-M1-T01": {
+      "epic": "Epic 4. Capability Signals, Mistake Patterns, and Focus Layer",
+      "milestone": "Milestone 4.1 \u2014 Capability signal generation",
+      "number": 41,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/41"
+    },
+    "E4-M1-T02": {
+      "epic": "Epic 4. Capability Signals, Mistake Patterns, and Focus Layer",
+      "milestone": "Milestone 4.1 \u2014 Capability signal generation",
+      "number": 42,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/42"
+    },
+    "E4-M1-T03": {
+      "epic": "Epic 4. Capability Signals, Mistake Patterns, and Focus Layer",
+      "milestone": "Milestone 4.1 \u2014 Capability signal generation",
+      "number": 43,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/43"
+    },
+    "E4-M2-T01": {
+      "epic": "Epic 4. Capability Signals, Mistake Patterns, and Focus Layer",
+      "milestone": "Milestone 4.2 \u2014 Mistake pattern generation and controls",
+      "number": 44,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/44"
+    },
+    "E4-M2-T02": {
+      "epic": "Epic 4. Capability Signals, Mistake Patterns, and Focus Layer",
+      "milestone": "Milestone 4.2 \u2014 Mistake pattern generation and controls",
+      "number": 45,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/45"
+    },
+    "E4-M2-T03": {
+      "epic": "Epic 4. Capability Signals, Mistake Patterns, and Focus Layer",
+      "milestone": "Milestone 4.2 \u2014 Mistake pattern generation and controls",
+      "number": 46,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/46"
+    },
+    "E4-M3-T01": {
+      "epic": "Epic 4. Capability Signals, Mistake Patterns, and Focus Layer",
+      "milestone": "Milestone 4.3 \u2014 Focus Card lifecycle",
+      "number": 47,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/47"
+    },
+    "E4-M3-T02": {
+      "epic": "Epic 4. Capability Signals, Mistake Patterns, and Focus Layer",
+      "milestone": "Milestone 4.3 \u2014 Focus Card lifecycle",
+      "number": 48,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/48"
+    },
+    "E4-M3-T03": {
+      "epic": "Epic 4. Capability Signals, Mistake Patterns, and Focus Layer",
+      "milestone": "Milestone 4.3 \u2014 Focus Card lifecycle",
+      "number": 49,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/49"
+    },
+    "E5-M1-T01": {
+      "epic": "Epic 5. Postcards and Passport",
+      "milestone": "Milestone 5.1 \u2014 Postcard generation",
+      "number": 50,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/50"
+    },
+    "E5-M1-T02": {
+      "epic": "Epic 5. Postcards and Passport",
+      "milestone": "Milestone 5.1 \u2014 Postcard generation",
+      "number": 51,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/51"
+    },
+    "E5-M1-T03": {
+      "epic": "Epic 5. Postcards and Passport",
+      "milestone": "Milestone 5.1 \u2014 Postcard generation",
+      "number": 52,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/52"
+    },
+    "E5-M2-T01": {
+      "epic": "Epic 5. Postcards and Passport",
+      "milestone": "Milestone 5.2 \u2014 Postcard updates and version review",
+      "number": 53,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/53"
+    },
+    "E5-M2-T02": {
+      "epic": "Epic 5. Postcards and Passport",
+      "milestone": "Milestone 5.2 \u2014 Postcard updates and version review",
+      "number": 54,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/54"
+    },
+    "E5-M2-T03": {
+      "epic": "Epic 5. Postcards and Passport",
+      "milestone": "Milestone 5.2 \u2014 Postcard updates and version review",
+      "number": 55,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/55"
+    },
+    "E5-M3-T01": {
+      "epic": "Epic 5. Postcards and Passport",
+      "milestone": "Milestone 5.3 \u2014 Passport manifest generation",
+      "number": 56,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/56"
+    },
+    "E5-M3-T02": {
+      "epic": "Epic 5. Postcards and Passport",
+      "milestone": "Milestone 5.3 \u2014 Passport manifest generation",
+      "number": 57,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/57"
+    },
+    "E5-M3-T03": {
+      "epic": "Epic 5. Postcards and Passport",
+      "milestone": "Milestone 5.3 \u2014 Passport manifest generation",
+      "number": 58,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/58"
+    },
+    "E5-M3-T04": {
+      "epic": "Epic 5. Postcards and Passport",
+      "milestone": "Milestone 5.3 \u2014 Passport manifest generation",
+      "number": 59,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/59"
+    },
+    "E6-M1-T01": {
+      "epic": "Epic 6. Mounting, Visa Bundles, and Session Control",
+      "milestone": "Milestone 6.1 \u2014 Passport-first mount flow",
+      "number": 60,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/60"
+    },
+    "E6-M1-T02": {
+      "epic": "Epic 6. Mounting, Visa Bundles, and Session Control",
+      "milestone": "Milestone 6.1 \u2014 Passport-first mount flow",
+      "number": 61,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/61"
+    },
+    "E6-M1-T03": {
+      "epic": "Epic 6. Mounting, Visa Bundles, and Session Control",
+      "milestone": "Milestone 6.1 \u2014 Passport-first mount flow",
+      "number": 62,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/62"
+    },
+    "E6-M2-T01": {
+      "epic": "Epic 6. Mounting, Visa Bundles, and Session Control",
+      "milestone": "Milestone 6.2 \u2014 Visa Bundles and topic-level access",
+      "number": 63,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/63"
+    },
+    "E6-M2-T02": {
+      "epic": "Epic 6. Mounting, Visa Bundles, and Session Control",
+      "milestone": "Milestone 6.2 \u2014 Visa Bundles and topic-level access",
+      "number": 64,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/64"
+    },
+    "E6-M2-T03": {
+      "epic": "Epic 6. Mounting, Visa Bundles, and Session Control",
+      "milestone": "Milestone 6.2 \u2014 Visa Bundles and topic-level access",
+      "number": 65,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/65"
+    },
+    "E6-M2-T04": {
+      "epic": "Epic 6. Mounting, Visa Bundles, and Session Control",
+      "milestone": "Milestone 6.2 \u2014 Visa Bundles and topic-level access",
+      "number": 66,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/66"
+    },
+    "E6-M3-T01": {
+      "epic": "Epic 6. Mounting, Visa Bundles, and Session Control",
+      "milestone": "Milestone 6.3 \u2014 Mount sessions and access logs",
+      "number": 67,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/67"
+    },
+    "E6-M3-T02": {
+      "epic": "Epic 6. Mounting, Visa Bundles, and Session Control",
+      "milestone": "Milestone 6.3 \u2014 Mount sessions and access logs",
+      "number": 68,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/68"
+    },
+    "E6-M3-T03": {
+      "epic": "Epic 6. Mounting, Visa Bundles, and Session Control",
+      "milestone": "Milestone 6.3 \u2014 Mount sessions and access logs",
+      "number": 69,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/69"
+    },
+    "E7-M1-T01": {
+      "epic": "Epic 7. Review Queue, Audit, Export, and Recovery",
+      "milestone": "Milestone 7.1 \u2014 Review Queue ingestion and candidate model",
+      "number": 70,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/70"
+    },
+    "E7-M1-T02": {
+      "epic": "Epic 7. Review Queue, Audit, Export, and Recovery",
+      "milestone": "Milestone 7.1 \u2014 Review Queue ingestion and candidate model",
+      "number": 71,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/71"
+    },
+    "E7-M1-T03": {
+      "epic": "Epic 7. Review Queue, Audit, Export, and Recovery",
+      "milestone": "Milestone 7.1 \u2014 Review Queue ingestion and candidate model",
+      "number": 72,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/72"
+    },
+    "E7-M2-T01": {
+      "epic": "Epic 7. Review Queue, Audit, Export, and Recovery",
+      "milestone": "Milestone 7.2 \u2014 Review actions and diff visibility",
+      "number": 73,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/73"
+    },
+    "E7-M2-T02": {
+      "epic": "Epic 7. Review Queue, Audit, Export, and Recovery",
+      "milestone": "Milestone 7.2 \u2014 Review actions and diff visibility",
+      "number": 74,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/74"
+    },
+    "E7-M2-T03": {
+      "epic": "Epic 7. Review Queue, Audit, Export, and Recovery",
+      "milestone": "Milestone 7.2 \u2014 Review actions and diff visibility",
+      "number": 75,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/75"
+    },
+    "E7-M3-T01": {
+      "epic": "Epic 7. Review Queue, Audit, Export, and Recovery",
+      "milestone": "Milestone 7.3 \u2014 Audit, export, backup, and restore",
+      "number": 76,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/76"
+    },
+    "E7-M3-T02": {
+      "epic": "Epic 7. Review Queue, Audit, Export, and Recovery",
+      "milestone": "Milestone 7.3 \u2014 Audit, export, backup, and restore",
+      "number": 77,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/77"
+    },
+    "E7-M3-T03": {
+      "epic": "Epic 7. Review Queue, Audit, Export, and Recovery",
+      "milestone": "Milestone 7.3 \u2014 Audit, export, backup, and restore",
+      "number": 78,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/78"
+    },
+    "E7-M3-T04": {
+      "epic": "Epic 7. Review Queue, Audit, Export, and Recovery",
+      "milestone": "Milestone 7.3 \u2014 Audit, export, backup, and restore",
+      "number": 79,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/79"
+    },
+    "E8-M1-T01": {
+      "epic": "Epic 8. Thin UI, Quality Gates, and Pilot Readiness",
+      "milestone": "Milestone 8.1 \u2014 Thin operator UI",
+      "number": 80,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/80"
+    },
+    "E8-M1-T02": {
+      "epic": "Epic 8. Thin UI, Quality Gates, and Pilot Readiness",
+      "milestone": "Milestone 8.1 \u2014 Thin operator UI",
+      "number": 81,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/81"
+    },
+    "E8-M1-T03": {
+      "epic": "Epic 8. Thin UI, Quality Gates, and Pilot Readiness",
+      "milestone": "Milestone 8.1 \u2014 Thin operator UI",
+      "number": 82,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/82"
+    },
+    "E8-M1-T04": {
+      "epic": "Epic 8. Thin UI, Quality Gates, and Pilot Readiness",
+      "milestone": "Milestone 8.1 \u2014 Thin operator UI",
+      "number": 83,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/83"
+    },
+    "E8-M2-T01": {
+      "epic": "Epic 8. Thin UI, Quality Gates, and Pilot Readiness",
+      "milestone": "Milestone 8.2 \u2014 Benchmarks, traceability tests, and guardrails",
+      "number": 84,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/84"
+    },
+    "E8-M2-T02": {
+      "epic": "Epic 8. Thin UI, Quality Gates, and Pilot Readiness",
+      "milestone": "Milestone 8.2 \u2014 Benchmarks, traceability tests, and guardrails",
+      "number": 85,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/85"
+    },
+    "E8-M2-T03": {
+      "epic": "Epic 8. Thin UI, Quality Gates, and Pilot Readiness",
+      "milestone": "Milestone 8.2 \u2014 Benchmarks, traceability tests, and guardrails",
+      "number": 86,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/86"
+    },
+    "E8-M2-T04": {
+      "epic": "Epic 8. Thin UI, Quality Gates, and Pilot Readiness",
+      "milestone": "Milestone 8.2 \u2014 Benchmarks, traceability tests, and guardrails",
+      "number": 87,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/87"
+    },
+    "E8-M3-T01": {
+      "epic": "Epic 8. Thin UI, Quality Gates, and Pilot Readiness",
+      "milestone": "Milestone 8.3 \u2014 Release gates and pilot instrumentation",
+      "number": 88,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/88"
+    },
+    "E8-M3-T02": {
+      "epic": "Epic 8. Thin UI, Quality Gates, and Pilot Readiness",
+      "milestone": "Milestone 8.3 \u2014 Release gates and pilot instrumentation",
+      "number": 89,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/89"
+    },
+    "E8-M3-T03": {
+      "epic": "Epic 8. Thin UI, Quality Gates, and Pilot Readiness",
+      "milestone": "Milestone 8.3 \u2014 Release gates and pilot instrumentation",
+      "number": 90,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/90"
+    },
+    "E8-M3-T04": {
+      "epic": "Epic 8. Thin UI, Quality Gates, and Pilot Readiness",
+      "milestone": "Milestone 8.3 \u2014 Release gates and pilot instrumentation",
+      "number": 91,
+      "url": "https://github.com/Yiping-Yin/ai-passport/issues/91"
+    }
+  },
+  "warnings": [
+    "Project provisioning skipped: error: your authentication token is missing required scopes [read:project]\nTo request it, run:  gh auth refresh -s read:project"
+  ]
 }
