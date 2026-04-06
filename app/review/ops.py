@@ -63,11 +63,15 @@ class OperationsService:
         }
 
     def release_gates(self, workspace_id: str) -> tuple[ReleaseGate, ...]:
-        metrics = self.metrics(workspace_id)
         passport = self.passport_service.passports.get_by_workspace(workspace_id)
         representative = self.postcard_service.representative_postcards(workspace_id)
         sessions = self._workspace_sessions(workspace_id)
         candidates = [candidate for candidate in self.candidates.list_all() if candidate.session_id in {session.id for session in sessions}]
+        export_restore_events = [
+            event
+            for event in self.audit.list_all()
+            if event.action == "restore_workspace" and event.meta.get("workspace_id") == workspace_id
+        ]
         return (
             ReleaseGate("end_to_end_flow", passport is not None and len(representative) >= 3, "Workspace can reach an initial Passport with representative postcards."),
             ReleaseGate("passport_plus_focus", passport is not None and bool(passport.focus_card_ids), "Passport manifest includes active focus and postcards."),
@@ -75,7 +79,7 @@ class OperationsService:
             ReleaseGate("review_queue", bool(candidates), "Writeback candidates flow into review rather than canonical state."),
             ReleaseGate("evidence_trace", self.evidence_trace_coverage(workspace_id) == 1.0, "High-level cards and Passport expose evidence links."),
             ReleaseGate("session_trace", all(candidate.session_id for candidate in candidates), "Every candidate references a mount session."),
-            ReleaseGate("export_restore", any(event.action == "restore_workspace" for event in self.audit.list_all()), "An export and restore cycle has been recorded."),
+            ReleaseGate("export_restore", bool(export_restore_events), "An export and restore cycle has been recorded."),
             ReleaseGate("pilot_feedback", False, "Awaiting real-user feedback collection."),
         )
 

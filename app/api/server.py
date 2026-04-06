@@ -267,6 +267,10 @@ class Application:
                 expiry_at=expiry_at,
             )
             return self._json_response(200, serialize_entity(visa))
+        if method == "POST" and path.startswith("/api/visas/") and path.endswith("/revoke"):
+            visa_id = path[len("/api/visas/") : -len("/revoke")]
+            visa = self.ctx.mount_service.revoke_visa(visa_id, actor="api")
+            return self._json_response(200, serialize_entity(visa))
         if method == "POST" and path == "/api/mount-sessions":
             data = _read_json(environ)
             session = self.ctx.mount_service.start_session(
@@ -274,6 +278,10 @@ class Application:
                 client_type=data["client_type"],
                 started_at=datetime.fromisoformat(data["started_at"]),
             )
+            return self._json_response(200, serialize_entity(session))
+        if method == "POST" and path.startswith("/api/mount-sessions/") and path.endswith("/end"):
+            session_id = path[len("/api/mount-sessions/") : -len("/end")]
+            session = self.ctx.mount_service.end_session(session_id, ended_at=utc_now())
             return self._json_response(200, serialize_entity(session))
         if method == "POST" and path == "/api/writeback-candidates":
             data = _read_json(environ)
@@ -284,6 +292,19 @@ class Application:
                 content=data["content"],
                 evidence_ids=tuple(data.get("evidence_ids", [])),
             )
+            return self._json_response(200, serialize_entity(candidate))
+        if method == "POST" and path.startswith("/api/review-candidates/") and path.endswith("/accept"):
+            candidate_id = path[len("/api/review-candidates/") : -len("/accept")]
+            candidate = self.ctx.review_service.accept_candidate(candidate_id, actor="api")
+            return self._json_response(200, serialize_entity(candidate))
+        if method == "POST" and path.startswith("/api/review-candidates/") and path.endswith("/reject"):
+            candidate_id = path[len("/api/review-candidates/") : -len("/reject")]
+            candidate = self.ctx.review_service.reject_candidate(candidate_id, actor="api")
+            return self._json_response(200, serialize_entity(candidate))
+        if method == "POST" and path.startswith("/api/review-candidates/") and path.endswith("/edit-accept"):
+            candidate_id = path[len("/api/review-candidates/") : -len("/edit-accept")]
+            data = _read_json(environ)
+            candidate = self.ctx.review_service.edit_then_accept(candidate_id, actor="api", content_override=data.get("content_override", {}))
             return self._json_response(200, serialize_entity(candidate))
         if method == "POST" and path == "/api/sources":
             data = _read_json(environ)
@@ -313,6 +334,27 @@ class Application:
                     "nodes": [serialize_entity(node) for node in result.nodes],
                 },
             )
+        if method == "GET" and path.startswith("/api/metrics/"):
+            workspace_id = path[len("/api/metrics/") :]
+            return self._json_response(200, self.ctx.operations_service.metrics(workspace_id))
+        if method == "GET" and path.startswith("/api/release-gates/"):
+            workspace_id = path[len("/api/release-gates/") :]
+            gates = [
+                {"key": gate.key, "passed": gate.passed, "details": gate.details}
+                for gate in self.ctx.operations_service.release_gates(workspace_id)
+            ]
+            return self._json_response(200, {"workspace_id": workspace_id, "gates": gates})
+        if method == "POST" and path == "/api/export":
+            data = _read_json(environ)
+            export_path = self.ctx.export_restore_service.export_workspace(
+                data["workspace_id"],
+                include_hidden=bool(data.get("include_hidden", False)),
+            )
+            return self._json_response(200, {"path": str(export_path)})
+        if method == "POST" and path == "/api/restore":
+            data = _read_json(environ)
+            payload = self.ctx.export_restore_service.restore_workspace(Path(data["path"]))
+            return self._json_response(200, payload)
         raise KeyError(path)
 
     def _handle_ui(
@@ -360,14 +402,27 @@ class Application:
         if path == "/actions/revoke-visa":
             self.ctx.mount_service.revoke_visa(data["visa_id"], actor="operator")
             return self._redirect(f"/mount?workspace_id={workspace_id}")
+        if path == "/actions/start-session":
+            self.ctx.mount_service.start_session(data["visa_id"], client_type="operator", started_at=utc_now())
+            return self._redirect(f"/mount?workspace_id={workspace_id}")
+        if path == "/actions/end-session":
+            self.ctx.mount_service.end_session(data["session_id"], ended_at=utc_now())
+            return self._redirect(f"/mount?workspace_id={workspace_id}")
         if path == "/actions/accept-candidate":
             self.ctx.review_service.accept_candidate(data["candidate_id"], actor="operator")
+            return self._redirect("/review")
+        if path == "/actions/edit-accept-candidate":
+            override = json.loads(data["content_override"]) if data.get("content_override") else {}
+            self.ctx.review_service.edit_then_accept(data["candidate_id"], actor="operator", content_override=override)
             return self._redirect("/review")
         if path == "/actions/reject-candidate":
             self.ctx.review_service.reject_candidate(data["candidate_id"], actor="operator")
             return self._redirect("/review")
         if path == "/actions/export-workspace":
             self.ctx.export_restore_service.export_workspace(workspace_id, include_hidden=False)
+            return self._redirect(f"/settings?workspace_id={workspace_id}")
+        if path == "/actions/restore-workspace":
+            self.ctx.export_restore_service.restore_workspace(Path(data["path"]))
             return self._redirect(f"/settings?workspace_id={workspace_id}")
         if path == "/actions/import-source":
             self.ctx.source_import_service.import_source(
@@ -469,7 +524,7 @@ class Application:
         </section>
         <section class="grid">
           <article class="panel"><h2>Visa Bundles</h2>{"".join(self._visa_card(visa, workspace_id) for visa in visas) or "<p>No visas yet.</p>"}</article>
-          <article class="panel"><h2>Sessions</h2>{"".join(f"<div class='item'><strong>{_e(session.id)}</strong><p>{_e(session.status.value)}</p></div>" for session in sessions) or "<p>No sessions yet.</p>"}</article>
+          <article class="panel"><h2>Sessions</h2>{"".join(self._session_card(session, workspace_id) for session in sessions) or "<p>No sessions yet.</p>"}</article>
         </section>
         """
         return _page("Mount", body)
@@ -511,6 +566,7 @@ class Application:
             if candidate.status.value == "pending":
                 actions = f"""
                 <form method="post" action="/actions/accept-candidate"><input type="hidden" name="candidate_id" value="{_e(candidate.id)}" /><button type="submit">Accept</button></form>
+                <form method="post" action="/actions/edit-accept-candidate"><input type="hidden" name="candidate_id" value="{_e(candidate.id)}" /><input name="content_override" placeholder='{{"summary":"Edited"}}' /><button type="submit">Edit + Accept</button></form>
                 <form method="post" action="/actions/reject-candidate"><input type="hidden" name="candidate_id" value="{_e(candidate.id)}" /><button type="submit">Reject</button></form>
                 """
             items.append(
@@ -539,6 +595,11 @@ class Application:
               <input type="hidden" name="workspace_id" value="{_e(workspace_id)}" />
               <button type="submit">Export Workspace</button>
             </form>
+            <form method="post" action="/actions/restore-workspace" class="stacked">
+              <input type="hidden" name="workspace_id" value="{_e(workspace_id)}" />
+              <input name="path" placeholder="Path to export package" required />
+              <button type="submit">Restore Workspace</button>
+            </form>
           </article>
           <article class="panel">
             <h2>Policies</h2>
@@ -562,7 +623,28 @@ class Application:
               <button type="submit">Revoke</button>
             </form>
             """
-        return f"<div class='item'><strong>{_e(visa.id)}</strong><p>{_e(visa.status.value)} / {', '.join(permission.value for permission in visa.permission_levels)}</p>{revoke}</div>"
+        start = ""
+        if visa.status.value == "active":
+            start = f"""
+            <form method="post" action="/actions/start-session">
+              <input type="hidden" name="visa_id" value="{_e(visa.id)}" />
+              <input type="hidden" name="workspace_id" value="{_e(workspace_id)}" />
+              <button type="submit">Start Session</button>
+            </form>
+            """
+        return f"<div class='item'><strong>{_e(visa.id)}</strong><p>{_e(visa.status.value)} / {', '.join(permission.value for permission in visa.permission_levels)}</p>{start}{revoke}</div>"
+
+    def _session_card(self, session, workspace_id: str) -> str:
+        end = ""
+        if session.status.value == "active":
+            end = f"""
+            <form method="post" action="/actions/end-session">
+              <input type="hidden" name="session_id" value="{_e(session.id)}" />
+              <input type="hidden" name="workspace_id" value="{_e(workspace_id)}" />
+              <button type="submit">End Session</button>
+            </form>
+            """
+        return f"<div class='item'><strong>{_e(session.id)}</strong><p>{_e(session.status.value)}</p>{end}</div>"
 
     def _inbox_item_card(self, item) -> str:
         preview = self.ctx.inbox_service.preview(item.source_id)

@@ -7,7 +7,7 @@ from tempfile import TemporaryDirectory
 import unittest
 
 from app.api.server import Application, build_context, make_testing_environ
-from app.domain import PermissionLevel, SourceType, WorkspaceType
+from app.domain import CandidateType, PermissionLevel, SourceType, WorkspaceType
 from app.ingest.service import SourceImportRequest
 
 
@@ -92,6 +92,14 @@ class ApiAndUiTests(unittest.TestCase):
         )
         self.assertEqual(status, "200 OK")
 
+        status, metrics = self._call_json("GET", f"/api/metrics/{self.workspace_id}")
+        self.assertEqual(status, "200 OK")
+        self.assertEqual(metrics["workspace_id"], self.workspace_id)
+
+        status, gates = self._call_json("GET", f"/api/release-gates/{self.workspace_id}")
+        self.assertEqual(status, "200 OK")
+        self.assertTrue(gates["gates"])
+
         status, session = self._call_json(
             "POST",
             "/api/mount-sessions",
@@ -123,6 +131,33 @@ class ApiAndUiTests(unittest.TestCase):
         )
         self.assertEqual(status, "200 OK")
         self.assertEqual(candidate["status"], "pending")
+
+        status, accepted = self._call_json("POST", f"/api/review-candidates/{candidate['id']}/accept", {})
+        self.assertEqual(status, "200 OK")
+        self.assertEqual(accepted["status"], "accepted")
+
+        status, session_end = self._call_json("POST", f"/api/mount-sessions/{session['id']}/end", {})
+        self.assertEqual(status, "200 OK")
+        self.assertEqual(session_end["status"], "ended")
+
+        status, revoked = self._call_json("POST", f"/api/visas/{visa['id']}/revoke", {})
+        self.assertEqual(status, "200 OK")
+        self.assertEqual(revoked["status"], "revoked")
+
+        status, export_payload = self._call_json(
+            "POST",
+            "/api/export",
+            {"workspace_id": self.workspace_id, "include_hidden": False},
+        )
+        self.assertEqual(status, "200 OK")
+
+        status, restore_payload = self._call_json(
+            "POST",
+            "/api/restore",
+            {"path": export_payload["path"]},
+        )
+        self.assertEqual(status, "200 OK")
+        self.assertEqual(restore_payload["workspace"]["id"], self.workspace_id)
 
         status, imported = self._call_json(
             "POST",
@@ -162,6 +197,20 @@ class ApiAndUiTests(unittest.TestCase):
             status, body = self._call_html(path, query=f"workspace_id={self.workspace_id}")
             self.assertEqual(status, "200 OK")
             self.assertIn(text, body)
+        status, mount_body = self._call_html("/mount", query=f"workspace_id={self.workspace_id}")
+        self.assertIn("Issue Default Passport Visa", mount_body)
+        visa = self.context.mount_service.issue_default_passport_visa(self.workspace_id, expiry_at=NOW + timedelta(hours=1))
+        status, mount_body_with_visa = self._call_html("/mount", query=f"workspace_id={self.workspace_id}")
+        self.assertIn("Start Session", mount_body_with_visa)
+        session = self.context.mount_service.start_session(visa.id, client_type="operator", started_at=NOW)
+        self.context.review_service.create_candidate(
+            session_id=session.id,
+            candidate_type=CandidateType.SUMMARY,
+            target_object=f"knowledge_node:{self.context.compile_service.nodes.list_by_workspace(self.workspace_id)[0].id}",
+            content={"summary": "UI candidate"},
+        )
+        status, review_body = self._call_html("/review", query=f"workspace_id={self.workspace_id}")
+        self.assertIn("Edit + Accept", review_body)
 
     def _call_json(self, method: str, path: str, payload: dict[str, object] | None = None, *, query: str = "") -> tuple[str, dict[str, object]]:
         body = json.dumps(payload).encode("utf-8") if payload is not None else b""
