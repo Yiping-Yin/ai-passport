@@ -1,14 +1,20 @@
 # AI Knowledge Passport
 
-Bootstrap repository for the AI Knowledge Passport MVP.
+Wiki-first local knowledge system built around:
+
+- a local source folder
+- generated Markdown wiki pages
+- a local web reader
+- optional AI enhancement on top of deterministic structure
 
 This repo follows the implementation guide's local-first defaults:
 
 - Python 3.11+
 - SQLite
 - Local filesystem for raw sources and exports
-- Minimal MCP surface
-- Milestone-by-milestone delivery
+- Markdown as canonical knowledge output
+- local web browsing as the primary interface
+- optional AI enhancement, not AI dependency
 
 ## Canonical Planning Inputs
 
@@ -29,11 +35,12 @@ This repo follows the implementation guide's local-first defaults:
 - `docs/spec/domain-serialization.md`: transport mapping for domain objects
 - `scripts/seed_github.py`: parse backlog, validate counts, and seed GitHub
 - `scripts/dev.py`: local lint, typecheck, test, migrate, and CI commands
-- `app/api/workspaces.py`: workspace CRUD, active-workspace state, and readiness placeholder service
-- `app/ingest/service.py`: source intake and raw-source preservation
-- `app/ingest/inbox.py`: inbox projection, compile jobs, preview, and recompile behavior
-- `app/compile/service.py`: node generation, revisions, evidence links, and source-jump lookup
-- `app/compile/review.py`: manual edit overlays, provenance, and compile diffs
+- `app/wiki/service.py`: vault config, folder scan, Markdown wiki generation
+- `app/wiki/watch.py`: stdlib polling watch mode
+- `app/api/server.py`: wiki-first local UI and JSON API
+- `app/ingest/service.py`: raw source handling used by legacy flows
+- `app/compile/service.py`: topic/project/method/question extraction reused for wiki structure
+- `app/passport/`, `app/gateway/`, `app/review/`: legacy/advanced flows kept for compatibility
 
 ## Local Commands
 
@@ -58,3 +65,14 @@ If you want the script to provision a GitHub Project as well, refresh the CLI to
 ```bash
 gh auth refresh -s read:project
 ```
+
+## Primary User Flow
+
+1. Start the app with `python3 scripts/run_server.py`
+2. Open `http://127.0.0.1:8000/home`
+3. Create a workspace
+4. Connect a local source folder
+5. Run `Scan Folder` or `Rebuild Wiki`
+6. Browse generated pages from `Home`, `Sources`, `Topics`, `Projects`, `Methods`, and `Questions`
+
+Legacy Passport/Mount/Review pages are still available under `Advanced`.

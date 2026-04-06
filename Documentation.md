@@ -6,7 +6,7 @@
 | --- | --- |
 | Runtime | Python 3.11+ |
 | Package manager | Standard library only at bootstrap |
-| App layout | `app/{domain,storage,ingest,compile,passport,gateway,review,api,mcp}` |
+| App layout | `app/{domain,storage,ingest,compile,passport,gateway,review,api,mcp,wiki}` |
 | Migration command | `python3 scripts/dev.py migrate` |
 | Seed command | `python3 scripts/dev.py seed` |
 | Lint command | `python3 scripts/dev.py lint` |
@@ -15,6 +15,8 @@
 | CI command | `python3 scripts/dev.py ci` |
 | Local server | `python3 scripts/run_server.py` |
 | Pilot script | `python3 scripts/pilot_flow.py` |
+| Wiki scan | `POST /api/wiki/scan` or UI `Scan Folder` |
+| Watch mode | `POST /api/wiki/watch/start` / `POST /api/wiki/watch/stop` |
 
 ## Verified Local Commands
 
@@ -52,3 +54,4 @@ gh api repos/Yiping-Yin/ai-passport/milestones?state=all&per_page=100
 - Branch, migration, and seed policies are frozen in `docs/spec/development-policy.md`.
 - Storage tables and relations are documented in `docs/spec/storage-schema.md`.
 - Release gates and pilot feedback references are in `docs/spec/release-gate-checklist.md` and `docs/spec/pilot-feedback-template.md`.
+- Wiki generation defaults to deterministic structure; AI enhancement is optional and degrades gracefully when unavailable.

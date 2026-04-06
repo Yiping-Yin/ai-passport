@@ -5,7 +5,9 @@ from __future__ import annotations
 import html
 import io
 import json
-from dataclasses import dataclass
+import shutil
+import subprocess
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Callable
@@ -16,6 +18,7 @@ from app.compile.review import KnowledgeNodeReviewService
 from app.compile.service import KnowledgeCompileService
 from app.domain import (
     CandidateType,
+    CardType,
     PermissionLevel,
     PrivacyLevel,
     SourceType,
@@ -49,6 +52,7 @@ from app.storage.sqlite import connect
 from app.storage.visas import VisaBundleRepository
 from app.storage.workspaces import WorkspaceRepository
 from app.utils.time import utc_now
+from app.wiki import WikiService, WikiWatchService
 
 
 DEFAULT_RAW_ROOT = REPO_ROOT / "data" / "workspaces"
@@ -72,6 +76,8 @@ class AppContext:
     review_service: ReviewService
     export_restore_service: ExportRestoreService
     operations_service: OperationsService
+    wiki_service: WikiService
+    wiki_watch_service: WikiWatchService
     connection: object
 
 
@@ -100,6 +106,11 @@ def build_context(
     candidates = ReviewCandidateRepository(connection)
     audits = AuditLogRepository(connection)
     raw_store = RawSourceStore(raw_root)
+    wiki_service = WikiService(
+        workspace_repository=workspaces,
+        raw_root=raw_root,
+    )
+    wiki_watch_service = WikiWatchService(wiki_service)
 
     workspace_service = WorkspaceService(workspaces, sources)
     active_workspace_state = ActiveWorkspaceState(workspace_service, sources)
@@ -214,6 +225,8 @@ def build_context(
         review_service=review_service,
         export_restore_service=export_restore_service,
         operations_service=operations_service,
+        wiki_service=wiki_service,
+        wiki_watch_service=wiki_watch_service,
         connection=connection,
     )
 
@@ -228,7 +241,7 @@ class Application:
         query = parse_qs(str(environ.get("QUERY_STRING", "")), keep_blank_values=True)
         try:
             if path == "/":
-                return self._redirect("/dashboard", start_response)
+                return self._redirect("/home", start_response)
             if path.startswith("/api/"):
                 status, headers, body = self._handle_api(method, path, query, environ)
             else:
@@ -249,6 +262,54 @@ class Application:
         query: dict[str, list[str]],
         environ: dict[str, object],
     ) -> tuple[str, list[tuple[str, str]], bytes]:
+        if method == "GET" and path.startswith("/api/vaults/"):
+            workspace_id = path[len("/api/vaults/") :]
+            config = self.ctx.wiki_service.get_or_create_vault(workspace_id)
+            return self._json_response(200, asdict(config))
+        if method == "POST" and path.startswith("/api/vaults/"):
+            workspace_id = path[len("/api/vaults/") :]
+            data = _read_json(environ)
+            config = self.ctx.wiki_service.update_vault(
+                workspace_id,
+                source_root=data.get("source_root"),
+                wiki_root=data.get("wiki_root"),
+                watcher_enabled=data.get("watcher_enabled"),
+                ai_enabled=data.get("ai_enabled"),
+                watch_interval_seconds=data.get("watch_interval_seconds"),
+            )
+            return self._json_response(200, asdict(config))
+        if method == "POST" and path == "/api/wiki/scan":
+            data = _read_json(environ)
+            result = self.ctx.wiki_service.scan_and_build(data["workspace_id"])
+            return self._json_response(200, serialize_build_result(result))
+        if method == "POST" and path == "/api/wiki/watch/start":
+            data = _read_json(environ)
+            state = self.ctx.wiki_watch_service.start(data["workspace_id"])
+            return self._json_response(200, asdict(state))
+        if method == "POST" and path == "/api/wiki/watch/stop":
+            data = _read_json(environ)
+            state = self.ctx.wiki_watch_service.stop(data["workspace_id"])
+            return self._json_response(200, asdict(state))
+        if method == "GET" and path.startswith("/api/wiki/watch/"):
+            workspace_id = path[len("/api/wiki/watch/") :]
+            return self._json_response(200, asdict(self.ctx.wiki_watch_service.status(workspace_id)))
+        if method == "GET" and path.startswith("/api/wiki/index/"):
+            workspace_id = path[len("/api/wiki/index/") :]
+            return self._json_response(200, self.ctx.wiki_service.page_index(workspace_id))
+        if method == "GET" and path.startswith("/api/wiki/page/"):
+            workspace_id = path[len("/api/wiki/page/") :]
+            relative_path = _single(query, "path")
+            return self._json_response(
+                200,
+                {
+                    "workspace_id": workspace_id,
+                    "path": relative_path,
+                    "content": self.ctx.wiki_service.read_page(workspace_id, relative_path),
+                },
+            )
+        if method == "GET" and path.startswith("/api/wiki/status/"):
+            workspace_id = path[len("/api/wiki/status/") :]
+            return self._json_response(200, self.ctx.wiki_service.status(workspace_id))
         if method == "GET" and path.startswith("/api/passport/") and path.endswith("/manifest"):
             passport_id = path[len("/api/passport/") : -len("/manifest")]
             return self._json_response(200, self.ctx.passport_service.read_machine_manifest(passport_id))
@@ -368,13 +429,33 @@ class Application:
     ) -> tuple[str, list[tuple[str, str]], bytes]:
         if method == "POST":
             return self._handle_ui_action(path, query, environ)
+        if not self.ctx.workspace_service.list_workspaces():
+            return "200 OK", [("Content-Type", "text/html; charset=utf-8")], self._onboarding_page().encode("utf-8")
         workspace_id = _single(query, "workspace_id", default=self._default_workspace_id())
-        if path == "/dashboard":
-            html_body = self._dashboard_page(workspace_id)
+        if path in {"/home", "/dashboard"}:
+            html_body = self._home_page(workspace_id)
+        elif path == "/sources":
+            html_body = self._wiki_category_page(workspace_id, "source", query)
+        elif path == "/topics":
+            html_body = self._wiki_category_page(workspace_id, "topic", query)
+        elif path == "/projects":
+            html_body = self._wiki_category_page(workspace_id, "project", query)
+        elif path == "/methods":
+            html_body = self._wiki_category_page(workspace_id, "method", query)
+        elif path == "/questions":
+            html_body = self._wiki_category_page(workspace_id, "question", query)
         elif path == "/inbox":
             html_body = self._inbox_page(workspace_id)
-        elif path == "/knowledge":
+        elif path == "/legacy/knowledge":
             html_body = self._knowledge_page(workspace_id)
+        elif path == "/legacy/passport":
+            html_body = self._passport_page(workspace_id)
+        elif path == "/legacy/mount":
+            html_body = self._mount_page(workspace_id)
+        elif path == "/legacy/review":
+            html_body = self._review_page()
+        elif path == "/legacy/settings":
+            html_body = self._settings_page(workspace_id)
         elif path == "/passport":
             html_body = self._passport_page(workspace_id)
         elif path == "/mount":
@@ -383,6 +464,10 @@ class Application:
             html_body = self._review_page()
         elif path == "/settings":
             html_body = self._settings_page(workspace_id)
+        elif path == "/legacy":
+            html_body = self._legacy_page(workspace_id)
+        elif path == "/passport":
+            html_body = self._passport_page(workspace_id)
         else:
             raise KeyError(path)
         return "200 OK", [("Content-Type", "text/html; charset=utf-8")], html_body.encode("utf-8")
@@ -394,7 +479,39 @@ class Application:
         environ: dict[str, object],
     ) -> tuple[str, list[tuple[str, str]], bytes]:
         data = _read_form(environ)
+        if path == "/actions/create-workspace":
+            title = data["title"]
+            workspace = self.ctx.workspace_service.create_workspace(
+                workspace_type=WorkspaceType(data.get("workspace_type", WorkspaceType.PERSONAL.value)),
+                title=title,
+                now=utc_now(),
+            )
+            self.ctx.wiki_service.get_or_create_vault(workspace.id)
+            return self._redirect(f"/settings?workspace_id={workspace.id}")
         workspace_id = data.get("workspace_id") or self._default_workspace_id()
+        if path == "/actions/connect-folder":
+            self.ctx.wiki_service.update_vault(
+                workspace_id,
+                source_root=data["source_root"],
+                ai_enabled=data.get("ai_enabled") == "on",
+                wiki_root=data.get("wiki_root") or None,
+            )
+            return self._redirect(f"/home?workspace_id={workspace_id}")
+        if path == "/actions/scan-folder":
+            self.ctx.wiki_service.scan_and_build(workspace_id)
+            return self._redirect(f"/home?workspace_id={workspace_id}")
+        if path == "/actions/rebuild-wiki":
+            self.ctx.wiki_service.scan_and_build(workspace_id)
+            return self._redirect(f"/home?workspace_id={workspace_id}")
+        if path == "/actions/start-watch":
+            self.ctx.wiki_watch_service.start(workspace_id)
+            return self._redirect(f"/settings?workspace_id={workspace_id}")
+        if path == "/actions/stop-watch":
+            self.ctx.wiki_watch_service.stop(workspace_id)
+            return self._redirect(f"/settings?workspace_id={workspace_id}")
+        if path == "/actions/open-wiki-folder":
+            self._open_folder(Path(self.ctx.wiki_service.get_or_create_vault(workspace_id).wiki_root))
+            return self._redirect(f"/settings?workspace_id={workspace_id}")
         if path == "/actions/generate-passport":
             self.ctx.passport_service.generate_for_workspace(workspace_id, recorded_at=utc_now())
             return self._redirect(f"/passport?workspace_id={workspace_id}")
@@ -472,11 +589,48 @@ class Application:
         """
         return _page("Dashboard", body)
 
+    def _home_page(self, workspace_id: str) -> str:
+        workspace = self.ctx.workspace_service.get_workspace(workspace_id)
+        vault = self.ctx.wiki_service.get_or_create_vault(workspace_id)
+        index = self.ctx.wiki_service.page_index(workspace_id)
+        if not vault.source_root:
+            return _page(
+                "Home",
+                f"""
+                <section class="hero">
+                  <p class="eyebrow">Wiki Home</p>
+                  <h1>{_e(workspace.title)}</h1>
+                  <p class="lede">Connect a local source folder to generate your personal knowledge wiki.</p>
+                </section>
+                {self._connect_folder_form(workspace_id, vault)}
+                """,
+            )
+        pages = index.get("pages", [])
+        body = f"""
+        <section class="hero">
+          <p class="eyebrow">Wiki Home</p>
+          <h1>{_e(workspace.title)}</h1>
+          <p class="lede">Source folder: <code>{_e(vault.source_root)}</code></p>
+          <form method="post" action="/actions/scan-folder"><input type="hidden" name="workspace_id" value="{_e(workspace_id)}" /><button type="submit">Scan Folder</button></form>
+          <form method="post" action="/actions/open-wiki-folder"><input type="hidden" name="workspace_id" value="{_e(workspace_id)}" /><button type="submit">Open Generated Wiki Folder</button></form>
+        </section>
+        <section class="grid">
+          <article class="panel"><h2>Build Status</h2><p>{_e(vault.last_build_status)}</p><p>{_e(vault.last_scan_at or 'never')}</p></article>
+          <article class="panel"><h2>Pages</h2><p>{len(pages)} generated pages</p></article>
+          <article class="panel"><h2>Warnings</h2><p>{len(index.get('warnings', []))} warnings</p></article>
+        </section>
+        <section class="panel">
+          <h2>Wiki Index</h2>
+          <pre>{_e(self.ctx.wiki_service.read_page(workspace_id, '_index.md')) if pages else 'No wiki generated yet.'}</pre>
+        </section>
+        """
+        return _page("Home", body)
+
     def _knowledge_page(self, workspace_id: str) -> str:
         nodes = self.ctx.compile_service.nodes.list_by_workspace(workspace_id)
-        signals = self.ctx.signal_service.generate_for_workspace(workspace_id).capability_signals
-        patterns = self.ctx.signal_service.generate_for_workspace(workspace_id).mistake_patterns
-        postcards = self.ctx.postcard_service.generate_for_workspace(workspace_id, recorded_at=utc_now())
+        signals = self.ctx.signal_service.signals.list_by_workspace(workspace_id)
+        patterns = self.ctx.signal_service.patterns.list_by_workspace(workspace_id)
+        postcards = self.ctx.postcard_service.postcards.list_by_workspace(workspace_id)
         body = "<section class='hero'><p class='eyebrow'>Knowledge</p><h1>Compiled Knowledge</h1></section>"
         body += "<section class='grid'>"
         body += "<article class='panel'><h2>Nodes</h2>" + "".join(
@@ -495,7 +649,26 @@ class Application:
         return _page("Knowledge", body)
 
     def _passport_page(self, workspace_id: str) -> str:
-        view = self.ctx.passport_service.generate_for_workspace(workspace_id, recorded_at=utc_now())
+        passport = self.ctx.passport_service.passports.get_by_workspace(workspace_id)
+        if passport is None:
+            body = f"""
+            <section class="hero">
+              <p class="eyebrow">Passport</p>
+              <h1>Passport Snapshot</h1>
+              <p class="lede">No Passport has been generated yet.</p>
+              <form method="post" action="/actions/generate-passport">
+                <input type="hidden" name="workspace_id" value="{_e(workspace_id)}" />
+                <button type="submit">Generate Passport</button>
+              </form>
+            </section>
+            """
+            return _page("Passport", body)
+        representative = tuple(
+            card
+            for card in self.ctx.postcard_service.postcards.list_by_workspace(workspace_id)
+            if card.id in passport.representative_postcard_ids
+        )
+        view = self.ctx.passport_service._human_view(passport, representative)
         body = f"""
         <section class="hero">
           <p class="eyebrow">Passport</p>
@@ -506,8 +679,8 @@ class Application:
           </form>
         </section>
         <section class="split">
-          <article class="panel"><h2>Human View</h2><pre>{_e(view.human_markdown)}</pre></article>
-          <article class="panel"><h2>Machine Manifest</h2><pre>{_e(json.dumps(view.machine_manifest, indent=2, sort_keys=True))}</pre></article>
+          <article class="panel"><h2>Human View</h2><pre>{_e(view)}</pre></article>
+          <article class="panel"><h2>Machine Manifest</h2><pre>{_e(json.dumps(passport.machine_manifest, indent=2, sort_keys=True))}</pre></article>
         </section>
         """
         return _page("Passport", body)
@@ -581,15 +754,28 @@ class Application:
     def _settings_page(self, workspace_id: str) -> str:
         workspace = self.ctx.workspace_service.get_workspace(workspace_id)
         gates = self.ctx.operations_service.release_gates(workspace_id)
+        vault = self.ctx.wiki_service.get_or_create_vault(workspace_id)
+        watch = self.ctx.wiki_watch_service.status(workspace_id)
         body = f"""
         <section class="hero">
           <p class="eyebrow">Settings</p>
-          <h1>Workspace Controls</h1>
+          <h1>Wiki Settings</h1>
         </section>
         <section class="grid">
           <article class="panel">
             <h2>Workspace</h2>
             <p>{_e(workspace.title)} ({_e(workspace.workspace_type.value)})</p>
+          </article>
+          <article class="panel">
+            <h2>Vault</h2>
+            {self._connect_folder_form(workspace_id, vault)}
+          </article>
+          <article class="panel">
+            <h2>Watch Mode</h2>
+            <p>{'running' if watch.running else 'stopped'}</p>
+            <form method="post" action="/actions/start-watch"><input type="hidden" name="workspace_id" value="{_e(workspace_id)}" /><button type="submit">Start Watching</button></form>
+            <form method="post" action="/actions/stop-watch"><input type="hidden" name="workspace_id" value="{_e(workspace_id)}" /><button type="submit">Stop Watching</button></form>
+            <form method="post" action="/actions/rebuild-wiki"><input type="hidden" name="workspace_id" value="{_e(workspace_id)}" /><button type="submit">Rebuild Wiki</button></form>
           </article>
           <article class="panel">
             <h2>Export</h2>
@@ -611,9 +797,99 @@ class Application:
             <h2>Release Gates</h2>
             {"".join(f"<div class='item'><strong>{_e(gate.key)}</strong><p>{'PASS' if gate.passed else 'PENDING'} - {_e(gate.details)}</p></div>" for gate in gates)}
           </article>
+          <article class="panel">
+            <h2>Advanced</h2>
+            <p><a href="/legacy/knowledge?workspace_id={_e(workspace_id)}">Legacy Knowledge</a></p>
+            <p><a href="/legacy/passport?workspace_id={_e(workspace_id)}">Legacy Passport</a></p>
+            <p><a href="/legacy/mount?workspace_id={_e(workspace_id)}">Legacy Mount</a></p>
+            <p><a href="/legacy/review?workspace_id={_e(workspace_id)}">Legacy Review</a></p>
+          </article>
         </section>
         """
         return _page("Settings", body)
+
+    def _wiki_category_page(self, workspace_id: str, kind: str, query: dict[str, list[str]]) -> str:
+        index = self.ctx.wiki_service.page_index(workspace_id)
+        pages = [page for page in index.get("pages", []) if page["kind"] == kind]
+        selected = _single(query, "page", default=pages[0]["path"] if pages else "")
+        content = self.ctx.wiki_service.read_page(workspace_id, selected) if selected else "No pages yet. Scan your folder first."
+        title = {
+            "source": "Sources",
+            "topic": "Topics",
+            "project": "Projects",
+            "method": "Methods",
+            "question": "Questions",
+        }[kind]
+        items = "".join(
+            f"<div class='item'><a href='/{title.lower()}?workspace_id={_e(workspace_id)}&page={_e(page['path'])}'>{_e(page['title'])}</a><p>{_e(page['summary'])}</p></div>"
+            for page in pages
+        ) or "<p>No generated pages yet.</p>"
+        body = f"""
+        <section class="hero"><p class="eyebrow">{_e(title)}</p><h1>{_e(title)}</h1></section>
+        <section class="split">
+          <article class="panel"><h2>{_e(title)} Index</h2>{items}</article>
+          <article class="panel"><h2>{_e(selected or title)}</h2>{_markdown_html(content)}</article>
+        </section>
+        """
+        return _page(title, body)
+
+    def _legacy_page(self, workspace_id: str) -> str:
+        return _page(
+            "Advanced",
+            f"""
+            <section class="hero">
+              <p class="eyebrow">Advanced</p>
+              <h1>Legacy Passport Views</h1>
+              <p class="lede">These routes are kept for compatibility while the default product is now wiki-first.</p>
+            </section>
+            <section class="panel">
+              <p><a href="/legacy/knowledge?workspace_id={_e(workspace_id)}">Legacy Knowledge</a></p>
+              <p><a href="/legacy/passport?workspace_id={_e(workspace_id)}">Legacy Passport</a></p>
+              <p><a href="/legacy/mount?workspace_id={_e(workspace_id)}">Legacy Mount</a></p>
+              <p><a href="/legacy/review?workspace_id={_e(workspace_id)}">Legacy Review</a></p>
+            </section>
+            """,
+        )
+
+    def _connect_folder_form(self, workspace_id: str, vault) -> str:
+        source_root = vault.source_root or ""
+        return f"""
+        <form method="post" action="/actions/connect-folder" class="stacked">
+          <input type="hidden" name="workspace_id" value="{_e(workspace_id)}" />
+          <input name="source_root" placeholder="Absolute path to your local source folder" value="{_e(source_root)}" required />
+          <input name="wiki_root" placeholder="Optional generated wiki folder path" value="{_e(vault.wiki_root)}" />
+          <label><input type="checkbox" name="ai_enabled" {'checked' if vault.ai_enabled else ''}/> Enable optional AI enhancement</label>
+          <button type="submit">Connect Folder</button>
+        </form>
+        """
+
+    def _onboarding_page(self) -> str:
+        body = """
+        <section class="hero">
+          <p class="eyebrow">Wiki Home</p>
+          <h1>Create Your Personal Knowledge Wiki</h1>
+          <p class="lede">Create a workspace first, then connect a local folder to scan and generate Markdown wiki pages.</p>
+        </section>
+        <section class="panel">
+          <form method="post" action="/actions/create-workspace" class="stacked">
+            <input name="title" placeholder="Workspace title" required />
+            <select name="workspace_type">
+              <option value="personal">Personal</option>
+              <option value="project">Project</option>
+              <option value="work">Work</option>
+            </select>
+            <button type="submit">Create Workspace</button>
+          </form>
+        </section>
+        """
+        return _page("Home", body)
+
+    @staticmethod
+    def _open_folder(path: Path) -> None:
+        if shutil.which("open"):
+            subprocess.run(["open", str(path)], check=False)
+        elif shutil.which("xdg-open"):
+            subprocess.run(["xdg-open", str(path)], check=False)
 
     def _visa_card(self, visa, workspace_id: str) -> str:
         revoke = ""
@@ -686,13 +962,14 @@ class Application:
 def _page(title: str, body: str) -> str:
     nav = """
     <nav class="nav">
-      <a href="/dashboard">Dashboard</a>
-      <a href="/inbox">Inbox</a>
-      <a href="/knowledge">Knowledge</a>
-      <a href="/passport">Passport</a>
-      <a href="/mount">Mount</a>
-      <a href="/review">Review</a>
+      <a href="/home">Home</a>
+      <a href="/sources">Sources</a>
+      <a href="/topics">Topics</a>
+      <a href="/projects">Projects</a>
+      <a href="/methods">Methods</a>
+      <a href="/questions">Questions</a>
       <a href="/settings">Settings</a>
+      <a href="/legacy">Advanced</a>
     </nav>
     """
     style = """
@@ -726,6 +1003,90 @@ def _page(title: str, body: str) -> str:
 
 def _e(value: object) -> str:
     return html.escape(str(value))
+
+
+def _markdown_html(markdown: str) -> str:
+    lines = markdown.splitlines()
+    html_lines: list[str] = []
+    in_list = False
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            if in_list:
+                html_lines.append("</ul>")
+                in_list = False
+            continue
+        if stripped.startswith("### "):
+            if in_list:
+                html_lines.append("</ul>")
+                in_list = False
+            html_lines.append(f"<h3>{_e(stripped[4:])}</h3>")
+            continue
+        if stripped.startswith("## "):
+            if in_list:
+                html_lines.append("</ul>")
+                in_list = False
+            html_lines.append(f"<h2>{_e(stripped[3:])}</h2>")
+            continue
+        if stripped.startswith("# "):
+            if in_list:
+                html_lines.append("</ul>")
+                in_list = False
+            html_lines.append(f"<h1>{_e(stripped[2:])}</h1>")
+            continue
+        if stripped.startswith("- "):
+            if not in_list:
+                html_lines.append("<ul>")
+                in_list = True
+            html_lines.append(f"<li>{_markdown_inline(stripped[2:])}</li>")
+            continue
+        if in_list:
+            html_lines.append("</ul>")
+            in_list = False
+        html_lines.append(f"<p>{_markdown_inline(stripped)}</p>")
+    if in_list:
+        html_lines.append("</ul>")
+    return "".join(html_lines)
+
+
+def _markdown_inline(text: str) -> str:
+    escaped = _e(text)
+    return re_sub_links(escaped)
+
+
+def re_sub_links(text: str) -> str:
+    return __import__("re").sub(
+        r"\[([^\]]+)\]\(([^)]+)\)",
+        lambda match: f"<a href='{_e(match.group(2))}'>{_e(match.group(1))}</a>",
+        text,
+    )
+
+
+def serialize_build_result(result) -> dict[str, object]:
+    return {
+        "workspace_id": result.workspace_id,
+        "generated_at": result.generated_at,
+        "scanned_file_count": result.scanned_file_count,
+        "changed_file_count": result.changed_file_count,
+        "removed_file_count": result.removed_file_count,
+        "skipped_files": list(result.skipped_files),
+        "warnings": list(result.warnings),
+        "ai_status": result.ai_status,
+        "home_page": result.home_page,
+        "pages": [
+            {
+                "kind": page.kind,
+                "slug": page.slug,
+                "title": page.title,
+                "relative_path": page.relative_path,
+                "source_ids": list(page.source_ids),
+                "backlinks": list(page.backlinks),
+                "source_refs": list(page.source_refs),
+                "summary": page.summary,
+            }
+            for page in result.pages
+        ],
+    }
 
 
 def _read_json(environ: dict[str, object]) -> dict[str, object]:

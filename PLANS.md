@@ -1,13 +1,13 @@
 # PLANS.md
 
-Current milestone: Pilot validation and follow-up tuning.
+Current milestone: Wiki-first pilot validation and follow-up tuning.
 
 Active scope:
 
-- Run the pilot script and gather structured feedback
-- Inspect release gates and metrics after real sessions
-- Tune heuristics and UI based on pilot evidence
-- Keep the MVP contract stable while learning from usage
+- Validate the wiki-first flow with real local folders
+- Inspect scan/build/watch behavior on real notes
+- Tune generated wiki structure and page readability based on usage
+- Keep legacy Passport routes available but secondary
 
 Out of scope until the next milestone:
 
