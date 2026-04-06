@@ -26,6 +26,7 @@ from app.storage.sources import SourceRepository
 from app.storage.sqlite import insert_record
 from app.storage.visas import VisaBundleRepository
 from app.storage.workspaces import WorkspaceRepository
+from app.gateway.service import MountService
 from app.utils.time import utc_now
 
 
@@ -47,6 +48,7 @@ class ReviewService:
         knowledge_review_service: KnowledgeNodeReviewService,
         postcard_repository: PostcardRepository,
         focus_repository: FocusCardRepository,
+        mount_service: MountService | None = None,
         storage_root: Path,
     ) -> None:
         self.candidates = candidate_repository
@@ -55,6 +57,7 @@ class ReviewService:
         self.knowledge = knowledge_review_service
         self.postcards = postcard_repository
         self.focus = focus_repository
+        self.mount = mount_service
         self.storage_root = storage_root
 
     def create_candidate(
@@ -69,6 +72,13 @@ class ReviewService:
         session = self.sessions.get(session_id)
         if session is None:
             raise KeyError(f"Unknown session: {session_id}")
+        target_type, target_id = target_object.split(":", 1)
+        target_workspace_id = self._target_workspace_id(target_type, target_id)
+        if self.mount is not None:
+            session = self.mount.authorize_writeback(
+                session_id=session_id,
+                target_workspace_id=target_workspace_id,
+            )
         candidate_id = f"candidate-{uuid4().hex[:12]}"
         payload_path = self._write_json("candidates", candidate_id, content)
         diff = self._build_diff(target_object, content)
@@ -278,6 +288,22 @@ class ReviewService:
             meta=meta,
         )
         self.audit.append(event)
+
+    def _target_workspace_id(self, target_type: str, target_id: str) -> str:
+        if target_type == "knowledge_node":
+            view = self.knowledge.effective_view(target_id)
+            return view.effective_node.workspace_id
+        if target_type == "postcard":
+            postcard = self.postcards.get(target_id)
+            if postcard is None:
+                raise KeyError(f"Unknown postcard: {target_id}")
+            return postcard.workspace_id
+        if target_type == "focus_card":
+            focus = self.focus.get(target_id)
+            if focus is None:
+                raise KeyError(f"Unknown focus card: {target_id}")
+            return focus.workspace_id
+        raise ValueError(f"Unsupported candidate target: {target_type}")
 
 
 def serialize_diff(diff: CandidateDiff) -> dict[str, object]:

@@ -148,6 +148,7 @@ def build_context(
         passport_service=passport_service,
         postcard_repository=postcards,
         postcard_service=postcard_service,
+        knowledge_node_repository=knowledge_nodes,
         focus_service=focus_service,
     )
     review_service = ReviewService(
@@ -160,6 +161,7 @@ def build_context(
         ),
         postcard_repository=postcards,
         focus_repository=focus_cards,
+        mount_service=mount_service,
         storage_root=review_root,
     )
     export_restore_service = ExportRestoreService(

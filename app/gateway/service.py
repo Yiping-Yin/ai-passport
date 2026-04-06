@@ -20,6 +20,7 @@ from app.domain import (
 from app.passport.service import PassportService, PostcardService
 from app.passport.signals import FocusCardService
 from app.storage.audit_logs import AuditLogRepository
+from app.storage.knowledge_nodes import KnowledgeNodeRepository
 from app.storage.mount_sessions import MountSessionRepository
 from app.storage.passports import PassportRepository
 from app.storage.postcards import PostcardRepository
@@ -48,6 +49,7 @@ class MountService:
         passport_service: PassportService,
         postcard_repository: PostcardRepository,
         postcard_service: PostcardService,
+        knowledge_node_repository: KnowledgeNodeRepository,
         focus_service: FocusCardService,
     ) -> None:
         self.visas = visa_repository
@@ -57,6 +59,7 @@ class MountService:
         self.passport_service = passport_service
         self.postcards = postcard_repository
         self.postcard_service = postcard_service
+        self.nodes = knowledge_node_repository
         self.focus_service = focus_service
 
     def issue_visa(
@@ -74,6 +77,11 @@ class MountService:
     ) -> VisaBundle:
         if PermissionLevel.WRITEBACK_CANDIDATE in permission_levels and access_mode is AccessMode.READ_ONLY:
             access_mode = AccessMode.CANDIDATE_WRITEBACK
+        self._validate_workspace_inclusions(
+            workspace_id=workspace_id,
+            included_postcards=included_postcards,
+            included_nodes=included_nodes,
+        )
         visa = VisaBundle(
             id=f"visa-{uuid4().hex[:12]}",
             scope=scope,
@@ -146,7 +154,7 @@ class MountService:
 
     def read_passport_manifest(self, session_id: str) -> SessionReadResult:
         session = self._get_session(session_id)
-        visa = self._authorize_visa(session.visa_id, required=PermissionLevel.PASSPORT_READ, now=session.started_at)
+        visa = self._authorize_visa(session.visa_id, required=PermissionLevel.PASSPORT_READ, now=utc_now())
         passport = self.passports.get_by_workspace(visa.workspace_id)
         if passport is None:
             raise KeyError(f"No passport for workspace {visa.workspace_id}")
@@ -157,7 +165,7 @@ class MountService:
 
     def read_postcard(self, session_id: str, postcard_id: str) -> SessionReadResult:
         session = self._get_session(session_id)
-        visa = self._authorize_visa(session.visa_id, required=PermissionLevel.TOPIC_READ, now=session.started_at)
+        visa = self._authorize_visa(session.visa_id, required=PermissionLevel.TOPIC_READ, now=utc_now())
         if postcard_id not in visa.included_postcards:
             raise AuthorizationError(f"Postcard {postcard_id} is not whitelisted in visa {visa.id}")
         postcard = self.postcards.get(postcard_id)
@@ -196,6 +204,15 @@ class MountService:
         )
         return self.sessions.update(updated)
 
+    def authorize_writeback(self, *, session_id: str, target_workspace_id: str) -> MountSession:
+        session = self._get_session(session_id)
+        visa = self._authorize_visa(session.visa_id, required=PermissionLevel.WRITEBACK_CANDIDATE, now=utc_now())
+        if visa.workspace_id != target_workspace_id:
+            raise AuthorizationError(
+                f"Session {session_id} cannot write back into workspace {target_workspace_id}"
+            )
+        return session
+
     def _authorize_visa(self, visa_id: str, *, required: PermissionLevel, now: datetime) -> VisaBundle:
         visa = self._get_visa(visa_id)
         if visa.status is not VisaStatus.ACTIVE:
@@ -217,6 +234,30 @@ class MountService:
         if session is None:
             raise KeyError(f"Unknown session: {session_id}")
         return session
+
+    def _validate_workspace_inclusions(
+        self,
+        *,
+        workspace_id: str,
+        included_postcards: tuple[str, ...],
+        included_nodes: tuple[str, ...],
+    ) -> None:
+        for postcard_id in included_postcards:
+            postcard = self.postcards.get(postcard_id)
+            if postcard is None:
+                raise KeyError(f"Unknown postcard: {postcard_id}")
+            if postcard.workspace_id != workspace_id:
+                raise AuthorizationError(
+                    f"Postcard {postcard_id} does not belong to workspace {workspace_id}"
+                )
+        for node_id in included_nodes:
+            node = self.nodes.get(node_id)
+            if node is None:
+                raise KeyError(f"Unknown knowledge node: {node_id}")
+            if node.workspace_id != workspace_id:
+                raise AuthorizationError(
+                    f"Knowledge node {node_id} does not belong to workspace {workspace_id}"
+                )
 
     def _audit(self, actor: str, action: str, object_id: str, meta: dict[str, object]) -> None:
         event = AuditLog(

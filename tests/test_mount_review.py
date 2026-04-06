@@ -32,6 +32,7 @@ from app.storage.sqlite import connect
 from app.storage.visas import VisaBundleRepository
 from app.storage.workspaces import WorkspaceRepository
 from app.api.workspaces import WorkspaceService
+from app.utils.time import utc_now
 
 
 NOW = datetime(2026, 4, 7, 9, 0, 0)
@@ -112,6 +113,7 @@ class MountAndReviewTests(unittest.TestCase):
             passport_service=self.passport_service,
             postcard_repository=PostcardRepository(self.connection),
             postcard_service=self.postcard_service,
+            knowledge_node_repository=self.nodes,
             focus_service=self.focus_service,
         )
         self.review = ReviewService(
@@ -124,6 +126,7 @@ class MountAndReviewTests(unittest.TestCase):
             ),
             postcard_repository=PostcardRepository(self.connection),
             focus_repository=FocusCardRepository(self.connection),
+            mount_service=self.mount,
             storage_root=self.review_root,
         )
 
@@ -191,6 +194,64 @@ class MountAndReviewTests(unittest.TestCase):
         with self.assertRaises(AuthorizationError):
             self.mount.read_postcard(session.id, self.representative_postcard.id)
 
+    def test_read_after_visa_expiry_is_rejected_even_for_existing_session(self) -> None:
+        current = utc_now()
+        visa = self.mount.issue_visa(
+            workspace_id=self.workspace_id,
+            included_postcards=(self.representative_postcard.id,),
+            included_nodes=(self.topic.id,),
+            permission_levels=(PermissionLevel.PASSPORT_READ, PermissionLevel.TOPIC_READ),
+            expiry_at=current + timedelta(minutes=5),
+        )
+        session = self.mount.start_session(visa.id, client_type="gpt", started_at=current)
+        self.mount.read_passport_manifest(session.id)
+        expired = type(visa)(
+            id=visa.id,
+            scope=visa.scope,
+            included_postcards=visa.included_postcards,
+            included_nodes=visa.included_nodes,
+            permission_levels=visa.permission_levels,
+            expiry_at=current - timedelta(minutes=1),
+            access_mode=visa.access_mode,
+            writeback_policy=visa.writeback_policy,
+            redaction_rules=visa.redaction_rules,
+            status=visa.status,
+            version=visa.version,
+            workspace_id=visa.workspace_id,
+        )
+        self.mount.visas.update(expired)
+        with self.assertRaises(AuthorizationError):
+            self.mount.read_postcard(session.id, self.representative_postcard.id)
+
+    def test_foreign_workspace_postcard_cannot_be_included_in_visa(self) -> None:
+        other_workspace = self.workspace_service.create_workspace(
+            workspace_type=WorkspaceType.PROJECT,
+            title="Other",
+            now=NOW + timedelta(minutes=10),
+        )
+        other_source = self.import_service.import_source(
+            SourceImportRequest(
+                workspace_id=other_workspace.id,
+                source_type=SourceType.MARKDOWN,
+                title="Other Fixture",
+                origin="other.md",
+                content=FIXTURE,
+                imported_at=NOW + timedelta(minutes=11),
+            )
+        )
+        self.compiler.compile_source(other_source.id, requested_at=NOW + timedelta(minutes=12))
+        self.passport_service.generate_for_workspace(other_workspace.id, recorded_at=NOW + timedelta(minutes=13))
+        foreign_postcard = self.postcard_service.representative_postcards(other_workspace.id)[0]
+
+        with self.assertRaises(AuthorizationError):
+            self.mount.issue_visa(
+                workspace_id=self.workspace_id,
+                included_postcards=(foreign_postcard.id,),
+                included_nodes=(),
+                permission_levels=(PermissionLevel.PASSPORT_READ, PermissionLevel.TOPIC_READ),
+                expiry_at=NOW + timedelta(hours=1),
+            )
+
     def test_review_candidate_diff_and_acceptance_updates_node(self) -> None:
         visa = self.mount.issue_visa(
             workspace_id=self.workspace_id,
@@ -240,3 +301,20 @@ class MountAndReviewTests(unittest.TestCase):
 
         self.assertEqual(rejected.status.value, "rejected")
         self.assertNotEqual(effective.effective_node.summary, "Rejected summary.")
+
+    def test_writeback_candidate_requires_permission(self) -> None:
+        visa = self.mount.issue_visa(
+            workspace_id=self.workspace_id,
+            included_postcards=(self.representative_postcard.id,),
+            included_nodes=(self.topic.id,),
+            permission_levels=(PermissionLevel.PASSPORT_READ, PermissionLevel.TOPIC_READ),
+            expiry_at=NOW + timedelta(hours=1),
+        )
+        session = self.mount.start_session(visa.id, client_type="gpt", started_at=NOW + timedelta(minutes=4))
+        with self.assertRaises(AuthorizationError):
+            self.review.create_candidate(
+                session_id=session.id,
+                candidate_type=CandidateType.SUMMARY,
+                target_object=f"knowledge_node:{self.topic.id}",
+                content={"summary": "Should be blocked"},
+            )

@@ -86,7 +86,11 @@ class ApiAndUiTests(unittest.TestCase):
                 "workspace_id": self.workspace_id,
                 "included_postcards": [self.postcard_id],
                 "included_nodes": [],
-                "permission_levels": [PermissionLevel.PASSPORT_READ.value, PermissionLevel.TOPIC_READ.value],
+                "permission_levels": [
+                    PermissionLevel.PASSPORT_READ.value,
+                    PermissionLevel.TOPIC_READ.value,
+                    PermissionLevel.WRITEBACK_CANDIDATE.value,
+                ],
                 "expiry_at": (NOW + timedelta(hours=1)).isoformat(),
             },
         )
@@ -199,7 +203,17 @@ class ApiAndUiTests(unittest.TestCase):
             self.assertIn(text, body)
         status, mount_body = self._call_html("/mount", query=f"workspace_id={self.workspace_id}")
         self.assertIn("Issue Default Passport Visa", mount_body)
-        visa = self.context.mount_service.issue_default_passport_visa(self.workspace_id, expiry_at=NOW + timedelta(hours=1))
+        visa = self.context.mount_service.issue_visa(
+            workspace_id=self.workspace_id,
+            included_postcards=(self.postcard_id,),
+            included_nodes=(self.context.compile_service.nodes.list_by_workspace(self.workspace_id)[0].id,),
+            permission_levels=(
+                PermissionLevel.PASSPORT_READ,
+                PermissionLevel.TOPIC_READ,
+                PermissionLevel.WRITEBACK_CANDIDATE,
+            ),
+            expiry_at=NOW + timedelta(hours=1),
+        )
         status, mount_body_with_visa = self._call_html("/mount", query=f"workspace_id={self.workspace_id}")
         self.assertIn("Start Session", mount_body_with_visa)
         session = self.context.mount_service.start_session(visa.id, client_type="operator", started_at=NOW)
