@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the local AI Knowledge Passport MVP server."""
+"""Run the local wiki-first AI Knowledge Passport server."""
 
 from __future__ import annotations
 
