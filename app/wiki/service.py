@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from datetime import datetime
 import hashlib
 import json
@@ -49,6 +49,11 @@ class ScannedSource:
     title: str
     content_hash: str
     content: str
+    category: str
+    collection: str
+    tags: tuple[str, ...]
+    difficulty: str
+    updated_at: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,6 +67,10 @@ class WikiPage:
     source_refs: tuple[str, ...]
     summary: str
     body: str
+    category: str = "General"
+    tags: tuple[str, ...] = ()
+    difficulty: str = "Intermediate"
+    updated_at: str | None = None
     warnings: tuple[str, ...] = ()
 
 
@@ -234,21 +243,30 @@ class WikiService:
                 warnings.append(str(exc))
                 continue
             relative_path = str(path.relative_to(source_root))
+            metadata = self._infer_source_metadata(relative_path, path.stem)
             scanned.append(
                 ScannedSource(
                     id=f"src-{self._hash(relative_path)[:12]}",
                     relative_path=relative_path,
                     absolute_path=str(path),
                     source_type=self._source_type_for_path(path),
-                    title=path.stem.replace("_", " ").replace("-", " "),
+                    title=self._display_title(path.stem),
                     content_hash=self._hash(content),
                     content=content,
+                    category=metadata["category"],
+                    collection=metadata["collection"],
+                    tags=tuple(metadata["tags"]),
+                    difficulty=metadata["difficulty"],
+                    updated_at=datetime.fromtimestamp(path.stat().st_mtime).isoformat(),
                 )
             )
         return scanned, skipped, warnings
 
     def _build_pages(self, scanned: list[ScannedSource], ai_enabled: bool) -> tuple[list[WikiPage], str, tuple[str, ...]]:
         nodes: dict[tuple[str, str], dict[str, object]] = {}
+        projects: dict[str, dict[str, object]] = {}
+        methods: dict[str, dict[str, object]] = {}
+        questions: dict[str, dict[str, object]] = {}
         source_refs: dict[str, list[str]] = {}
         warnings: list[str] = []
         ai_status = AIGenerationStatus.DISABLED
@@ -281,12 +299,22 @@ class WikiService:
                         "related_refs": set(draft.related_refs),
                         "source_ids": {source.id},
                         "source_paths": {source.relative_path},
+                        "category": source.category,
+                        "tags": set(source.tags),
+                        "difficulty": source.difficulty,
+                        "updated_at": source.updated_at,
                     }
                 else:
                     nodes[key]["body_sections"].append(f"### Source: {source.relative_path}\n\n{draft.body}")
                     nodes[key]["related_refs"].update(draft.related_refs)
                     nodes[key]["source_ids"].add(source.id)
                     nodes[key]["source_paths"].add(source.relative_path)
+                    nodes[key]["tags"].update(source.tags)
+                    nodes[key]["updated_at"] = max(nodes[key]["updated_at"], source.updated_at)
+
+            self._add_project_group(projects, source)
+            self._maybe_add_method(methods, source)
+            self._maybe_add_question(questions, source)
 
         id_map = {
             (kind, title): f"{kind}s/{self._slug(title)}.md"
@@ -318,10 +346,17 @@ class WikiService:
                     source_refs=tuple(sorted(data["source_paths"])),
                     summary=data["summary"],
                     body="\n\n".join(data["body_sections"]),
+                    category=data["category"],
+                    tags=tuple(sorted(data["tags"])),
+                    difficulty=data["difficulty"],
+                    updated_at=data["updated_at"],
                     warnings=(),
                 )
             )
 
+        pages.extend(self._group_pages("project", projects))
+        pages.extend(self._group_pages("method", methods))
+        pages.extend(self._group_pages("question", questions))
         pages.extend(self._source_pages(scanned, source_refs))
         pages.extend(self._index_pages(pages, scanned))
         return pages, ai_status, tuple(warnings)
@@ -341,7 +376,11 @@ class WikiService:
                     backlinks=(),
                     source_refs=tuple(sorted(source_refs[source.id])),
                     summary=f"Source file {source.relative_path}",
-                    body=f"**Path:** `{source.relative_path}`\n\n## Linked Pages\n" + "\n".join(f"- [{ref}]({ref})" for ref in sorted(source_refs[source.id])) + f"\n\n## Excerpt\n\n{excerpt}",
+                    body=f"**Path:** `{source.relative_path}`\n\n**Category:** {source.category}\n\n**Collection:** {source.collection}\n\n## Linked Pages\n" + "\n".join(f"- [{ref}]({ref})" for ref in sorted(source_refs[source.id])) + f"\n\n## Excerpt\n\n{excerpt}",
+                    category=source.category,
+                    tags=source.tags,
+                    difficulty=source.difficulty,
+                    updated_at=source.updated_at,
                 )
             )
         return pages
@@ -351,6 +390,12 @@ class WikiService:
         for page in pages:
             if page.kind in by_kind:
                 by_kind[page.kind].append(page)
+        category_counts: dict[str, int] = {}
+        tag_counts: dict[str, int] = {}
+        for page in pages:
+            category_counts[page.category] = category_counts.get(page.category, 0) + 1
+            for tag in page.tags:
+                tag_counts[tag] = tag_counts.get(tag, 0) + 1
         generated_at = utc_now().isoformat()
         index_pages = [
             WikiPage(
@@ -369,6 +414,11 @@ class WikiService:
                     f"- Projects: {len(by_kind['project'])}\n"
                     f"- Methods: {len(by_kind['method'])}\n"
                     f"- Questions: {len(by_kind['question'])}\n\n"
+                    "## Categories\n"
+                    + "\n".join(f"- {category}: {count}" for category, count in sorted(category_counts.items()))
+                    + "\n\n## Popular Tags\n"
+                    + "\n".join(f"- {tag}: {count}" for tag, count in sorted(tag_counts.items(), key=lambda item: (-item[1], item[0]))[:12])
+                    + "\n\n"
                     "## Browse\n"
                     + "\n".join(
                         [
@@ -418,6 +468,13 @@ class WikiService:
         skipped: list[str],
         ai_status: str,
     ) -> None:
+        content_pages = [page for page in pages if page.kind not in {"index"} and not page.kind.endswith("_index")]
+        category_counts: dict[str, int] = {}
+        tag_counts: dict[str, int] = {}
+        for page in content_pages:
+            category_counts[page.category] = category_counts.get(page.category, 0) + 1
+            for tag in page.tags:
+                tag_counts[tag] = tag_counts.get(tag, 0) + 1
         index = {
             "workspace_id": workspace_id,
             "generated_at": utc_now().isoformat(),
@@ -436,9 +493,15 @@ class WikiService:
                     "backlinks": list(page.backlinks),
                     "source_refs": list(page.source_refs),
                     "summary": page.summary,
+                    "category": page.category,
+                    "tags": list(page.tags),
+                    "difficulty": page.difficulty,
+                    "updated_at": page.updated_at,
                 }
                 for page in pages
             ],
+            "categories": category_counts,
+            "tags": tag_counts,
         }
         (wiki_root / INDEX_FILENAME).write_text(json.dumps(index, indent=2, sort_keys=True) + "\n")
 
@@ -453,7 +516,18 @@ class WikiService:
                     stale.unlink()
 
     def _render_page(self, page: WikiPage) -> str:
-        lines = [f"# {page.title}", "", page.summary, "", page.body]
+        lines = [f"# {page.title}"]
+        if page.summary:
+            lines.extend(["", page.summary])
+        metadata = [
+            f"**Category:** {page.category}",
+            f"**Difficulty:** {page.difficulty}",
+        ]
+        if page.tags:
+            metadata.append("**Tags:** " + ", ".join(page.tags))
+        if page.updated_at:
+            metadata.append(f"**Updated from source:** {page.updated_at}")
+        lines.extend(["", *metadata, "", page.body])
         if page.source_refs:
             lines.extend(["", "## Source References"])
             lines.extend(f"- [{ref}](../sources/{self._slug(Path(ref).stem)}.md)" if not ref.startswith("sources/") else f"- [{ref}]({Path(ref).name})" for ref in page.source_refs)
@@ -546,3 +620,166 @@ class WikiService:
         workspace = self._get_workspace(config.workspace_id)
         path = self._vault_config_path(workspace)
         path.write_text(json.dumps(asdict(config), indent=2, sort_keys=True) + "\n")
+
+    def _display_title(self, stem: str) -> str:
+        normalized = re.sub(r"\.(pdf|md|txt|docx|pptx|xlsx|csv)$", "", stem, flags=re.IGNORECASE)
+        return re.sub(r"\s+", " ", normalized.replace("_", " ").replace("-", " ")).strip()
+
+    def _infer_source_metadata(self, relative_path: str, stem: str) -> dict[str, object]:
+        parts = [part.strip() for part in Path(relative_path).parts[:-1] if part.strip()]
+        title = self._display_title(stem)
+        tags: set[str] = set()
+        category = "General"
+        collection = "General"
+        difficulty = "Intermediate"
+
+        for index, part in enumerate(parts):
+            lower = part.lower()
+            next_part = parts[index + 1] if index + 1 < len(parts) else ""
+            if lower == "week" and next_part.lower().startswith("week "):
+                category = "Week"
+                collection = next_part
+                tags.add(next_part)
+                break
+            if lower.startswith("week "):
+                category = "Week"
+                collection = part
+                tags.add(part)
+                break
+            if lower == "assessment" and next_part.lower().startswith("assessment"):
+                category = "Assessment"
+                collection = next_part
+                tags.add(next_part)
+                break
+            if lower.startswith("assessment"):
+                category = "Assessment"
+                collection = part
+                tags.add(part)
+                break
+
+        lowered = title.lower()
+        is_assessment_doc = "rubric" in lowered or "assessment guide" in lowered
+        if "case study" in lowered:
+            tags.add("Case Study")
+            difficulty = "Advanced"
+        if "answers to" in lowered or "deep dive" in lowered:
+            difficulty = "Advanced"
+        if "hands on" in lowered or "exercise" in lowered or "tutorial" in lowered or "lab" in lowered or ("guide" in lowered and not is_assessment_doc):
+            tags.add("Hands-On")
+            difficulty = "Intermediate"
+        if "preparation" in lowered or "pre-seminar" in lowered:
+            tags.add("Preparation")
+            difficulty = "Beginner"
+        if "reading" in lowered:
+            tags.add("Reading")
+            category = "Reading" if category == "General" else category
+        if "slides" in lowered:
+            tags.add("Slides")
+        if is_assessment_doc:
+            category = "Assessment"
+            if collection == "General":
+                collection = "Course Docs"
+            tags.add("Assessment Docs")
+        if category == "General":
+            category = "Reference"
+            collection = "Course Docs"
+        tags.add(category)
+        if collection != "General" and collection != category:
+            tags.add(collection)
+        return {
+            "category": category,
+            "collection": collection,
+            "tags": sorted(tags),
+            "difficulty": difficulty,
+        }
+
+    def _add_project_group(self, projects: dict[str, dict[str, object]], source: ScannedSource) -> None:
+        if source.collection == "General":
+            return
+        group = projects.setdefault(
+            source.collection,
+            {
+                "category": source.category,
+                "slug": self._slug(source.collection),
+                "sources": [],
+                "tags": set(source.tags),
+                "difficulty": source.difficulty,
+                "updated_at": source.updated_at,
+            },
+        )
+        group["sources"].append(source)
+        group["tags"].update(source.tags)
+        group["updated_at"] = max(group["updated_at"], source.updated_at)
+
+    def _maybe_add_method(self, methods: dict[str, dict[str, object]], source: ScannedSource) -> None:
+        lowered = source.title.lower()
+        if "assessment guide" in lowered or "rubric" in lowered:
+            return
+        if not any(token in lowered for token in ("hands on", "exercise", "guide", "tutorial", "lab")):
+            return
+        group = methods.setdefault(
+            source.title,
+            {
+                "category": source.category,
+                "slug": self._slug(source.title),
+                "sources": [],
+                "tags": set(source.tags),
+                "difficulty": source.difficulty,
+                "updated_at": source.updated_at,
+            },
+        )
+        group["sources"].append(source)
+        group["tags"].update(source.tags)
+        group["updated_at"] = max(group["updated_at"], source.updated_at)
+
+    def _maybe_add_question(self, questions: dict[str, dict[str, object]], source: ScannedSource) -> None:
+        lowered = source.title.lower()
+        if not any(token in lowered for token in ("case study", "pre-seminar", "question")):
+            return
+        group = questions.setdefault(
+            source.title,
+            {
+                "category": source.category,
+                "slug": self._slug(source.title),
+                "sources": [],
+                "tags": set(source.tags),
+                "difficulty": "Advanced",
+                "updated_at": source.updated_at,
+            },
+        )
+        group["sources"].append(source)
+        group["tags"].update(source.tags)
+        group["updated_at"] = max(group["updated_at"], source.updated_at)
+
+    def _group_pages(self, kind: str, groups: dict[str, dict[str, object]]) -> list[WikiPage]:
+        pages: list[WikiPage] = []
+        for title, data in sorted(groups.items()):
+            sources = sorted(data["sources"], key=lambda source: source.relative_path)
+            body = "\n".join(
+                [
+                    f"# {title}",
+                    "",
+                    f"Generated from {len(sources)} source file(s).",
+                    "",
+                    "## Included Sources",
+                    *[f"- [{source.title}](../sources/{self._slug(source.title)}.md)" for source in sources],
+                ]
+            )
+            pages.append(
+                WikiPage(
+                    kind=kind,
+                    slug=data["slug"],
+                    title=title,
+                    relative_path=f"{kind}s/{data['slug']}.md",
+                    source_ids=tuple(source.id for source in sources),
+                    backlinks=(),
+                    source_refs=tuple(source.relative_path for source in sources),
+                    summary=f"{title} groups {len(sources)} course resources.",
+                    body=body,
+                    category=data["category"],
+                    tags=tuple(sorted(data["tags"])),
+                    difficulty=data["difficulty"],
+                    updated_at=data["updated_at"],
+                )
+            )
+        return pages

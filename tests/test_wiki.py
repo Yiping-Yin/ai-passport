@@ -122,3 +122,18 @@ class WikiTests(unittest.TestCase):
                 os.environ["OPENAI_API_KEY"] = previous
             else:
                 os.environ.pop("OPENAI_API_KEY", None)
+
+    def test_course_metadata_groups_root_docs_without_filename_categories(self) -> None:
+        (self.source_root / "INFS3822 Assessment Guide T1 2026.pdf.txt").write_text("Assessment guide content.")
+        week_dir = self.source_root / "Week" / "Week 1"
+        week_dir.mkdir(parents=True)
+        (week_dir / "Hands-On Activity - Week 1.txt").write_text("Hands-on course activity.")
+
+        self.service.scan_and_build(self.workspace.id)
+        index = self.service.page_index(self.workspace.id)
+
+        self.assertIn("Assessment", index["categories"])
+        self.assertIn("Week", index["categories"])
+        self.assertNotIn("INFS3822 Assessment Guide T1 2026.pdf", index["categories"])
+        self.assertTrue(any(page["kind"] == "project" and page["title"] == "Course Docs" for page in index["pages"]))
+        self.assertFalse(any(page["kind"] == "method" and "Assessment Guide" in page["title"] for page in index["pages"]))

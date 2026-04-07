@@ -128,11 +128,31 @@ class ApiAndUiTests(unittest.TestCase):
             ("/projects", "Projects"),
             ("/methods", "Methods"),
             ("/questions", "Questions"),
+            ("/search", "Search Wiki"),
             ("/settings", "Wiki Settings"),
         ):
             status, body = self._call_html(self.app, path, query=f"workspace_id={self.workspace_id}")
             self.assertEqual(status, "200 OK")
             self.assertIn(text, body)
+        status, body = self._call_html(self.app, "/home", query=f"workspace_id={self.workspace_id}")
+        self.assertIn("Recently Updated", body)
+        self.assertIn("Popular Tags", body)
+
+    def test_wiki_page_links_are_rewritten_to_app_routes(self) -> None:
+        status, body = self._call_html(
+            self.app,
+            "/methods",
+            query=f"workspace_id={self.workspace_id}&page=methods/dataclass-serialization.md",
+        )
+        self.assertEqual(status, "200 OK")
+        self.assertIn(
+            f"/topics?workspace_id={self.workspace_id}&amp;page=topics/python-typing.md",
+            body,
+        )
+        self.assertIn(
+            f"/sources?workspace_id={self.workspace_id}&amp;page=sources/typing.md",
+            body,
+        )
 
     def _call_json(self, method: str, path: str, payload: dict[str, object] | None = None, *, query: str = "") -> tuple[str, dict[str, object]]:
         body = json.dumps(payload).encode("utf-8") if payload is not None else b""

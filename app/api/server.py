@@ -5,6 +5,7 @@ from __future__ import annotations
 import html
 import io
 import json
+import posixpath
 import shutil
 import subprocess
 from dataclasses import asdict, dataclass
@@ -453,7 +454,7 @@ class Application:
         elif path == "/legacy/mount":
             html_body = self._mount_page(workspace_id)
         elif path == "/legacy/review":
-            html_body = self._review_page()
+            html_body = self._review_page(workspace_id)
         elif path == "/legacy/settings":
             html_body = self._settings_page(workspace_id)
         elif path == "/passport":
@@ -461,15 +462,21 @@ class Application:
         elif path == "/mount":
             html_body = self._mount_page(workspace_id)
         elif path == "/review":
-            html_body = self._review_page()
+            html_body = self._review_page(workspace_id)
         elif path == "/settings":
             html_body = self._settings_page(workspace_id)
+        elif path == "/search":
+            html_body = self._search_page(workspace_id, _single(query, "q", default=""))
         elif path == "/legacy":
             html_body = self._legacy_page(workspace_id)
         elif path == "/passport":
             html_body = self._passport_page(workspace_id)
         else:
             raise KeyError(path)
+        flash = _single(query, "flash", default="")
+        if flash:
+            banner = f"<div class='flash'>{_e(flash)}</div>"
+            html_body = html_body.replace("<div class='shell'>", f"<div class='shell'>{banner}", 1)
         return "200 OK", [("Content-Type", "text/html; charset=utf-8")], html_body.encode("utf-8")
 
     def _handle_ui_action(
@@ -496,53 +503,53 @@ class Application:
                 ai_enabled=data.get("ai_enabled") == "on",
                 wiki_root=data.get("wiki_root") or None,
             )
-            return self._redirect(f"/home?workspace_id={workspace_id}")
+            return self._redirect(f"/home?workspace_id={workspace_id}&flash=Source+folder+connected")
         if path == "/actions/scan-folder":
             self.ctx.wiki_service.scan_and_build(workspace_id)
-            return self._redirect(f"/home?workspace_id={workspace_id}")
+            return self._redirect(f"/home?workspace_id={workspace_id}&flash=Folder+scanned+and+wiki+rebuilt")
         if path == "/actions/rebuild-wiki":
             self.ctx.wiki_service.scan_and_build(workspace_id)
-            return self._redirect(f"/home?workspace_id={workspace_id}")
+            return self._redirect(f"/home?workspace_id={workspace_id}&flash=Wiki+rebuilt")
         if path == "/actions/start-watch":
             self.ctx.wiki_watch_service.start(workspace_id)
-            return self._redirect(f"/settings?workspace_id={workspace_id}")
+            return self._redirect(f"/settings?workspace_id={workspace_id}&flash=Watch+started")
         if path == "/actions/stop-watch":
             self.ctx.wiki_watch_service.stop(workspace_id)
-            return self._redirect(f"/settings?workspace_id={workspace_id}")
+            return self._redirect(f"/settings?workspace_id={workspace_id}&flash=Watch+stopped")
         if path == "/actions/open-wiki-folder":
             self._open_folder(Path(self.ctx.wiki_service.get_or_create_vault(workspace_id).wiki_root))
-            return self._redirect(f"/settings?workspace_id={workspace_id}")
+            return self._redirect(f"/settings?workspace_id={workspace_id}&flash=Opened+wiki+folder")
         if path == "/actions/generate-passport":
             self.ctx.passport_service.generate_for_workspace(workspace_id, recorded_at=utc_now())
-            return self._redirect(f"/passport?workspace_id={workspace_id}")
+            return self._redirect(f"/passport?workspace_id={workspace_id}&flash=Passport+generated")
         if path == "/actions/issue-default-visa":
             self.ctx.mount_service.issue_default_passport_visa(workspace_id, expiry_at=utc_now() + timedelta(hours=1))
-            return self._redirect(f"/mount?workspace_id={workspace_id}")
+            return self._redirect(f"/mount?workspace_id={workspace_id}&flash=Visa+issued")
         if path == "/actions/revoke-visa":
             self.ctx.mount_service.revoke_visa(data["visa_id"], actor="operator")
-            return self._redirect(f"/mount?workspace_id={workspace_id}")
+            return self._redirect(f"/mount?workspace_id={workspace_id}&flash=Visa+revoked")
         if path == "/actions/start-session":
             self.ctx.mount_service.start_session(data["visa_id"], client_type="operator", started_at=utc_now())
-            return self._redirect(f"/mount?workspace_id={workspace_id}")
+            return self._redirect(f"/mount?workspace_id={workspace_id}&flash=Session+started")
         if path == "/actions/end-session":
             self.ctx.mount_service.end_session(data["session_id"], ended_at=utc_now())
-            return self._redirect(f"/mount?workspace_id={workspace_id}")
+            return self._redirect(f"/mount?workspace_id={workspace_id}&flash=Session+ended")
         if path == "/actions/accept-candidate":
             self.ctx.review_service.accept_candidate(data["candidate_id"], actor="operator")
-            return self._redirect("/review")
+            return self._redirect("/review?flash=Candidate+accepted")
         if path == "/actions/edit-accept-candidate":
             override = json.loads(data["content_override"]) if data.get("content_override") else {}
             self.ctx.review_service.edit_then_accept(data["candidate_id"], actor="operator", content_override=override)
-            return self._redirect("/review")
+            return self._redirect("/review?flash=Candidate+edited+and+accepted")
         if path == "/actions/reject-candidate":
             self.ctx.review_service.reject_candidate(data["candidate_id"], actor="operator")
-            return self._redirect("/review")
+            return self._redirect("/review?flash=Candidate+rejected")
         if path == "/actions/export-workspace":
             self.ctx.export_restore_service.export_workspace(workspace_id, include_hidden=False)
-            return self._redirect(f"/settings?workspace_id={workspace_id}")
+            return self._redirect(f"/settings?workspace_id={workspace_id}&flash=Workspace+exported")
         if path == "/actions/restore-workspace":
             self.ctx.export_restore_service.restore_workspace(Path(data["path"]))
-            return self._redirect(f"/settings?workspace_id={workspace_id}")
+            return self._redirect(f"/settings?workspace_id={workspace_id}&flash=Workspace+restored")
         if path == "/actions/import-source":
             self.ctx.source_import_service.import_source(
                 SourceImportRequest(
@@ -555,10 +562,10 @@ class Application:
                     privacy_level=data.get("privacy_level") or None,
                 )
             )
-            return self._redirect(f"/inbox?workspace_id={workspace_id}")
+            return self._redirect(f"/inbox?workspace_id={workspace_id}&flash=Source+imported")
         if path == "/actions/compile-source":
             self.ctx.compile_service.compile_source(data["source_id"], requested_at=utc_now())
-            return self._redirect(f"/inbox?workspace_id={workspace_id}")
+            return self._redirect(f"/inbox?workspace_id={workspace_id}&flash=Source+compiled")
         raise KeyError(path)
 
     def _dashboard_page(self, workspace_id: str) -> str:
@@ -587,7 +594,7 @@ class Application:
           <article class="panel"><h2>Representative Postcards</h2><p>{metrics['representative_postcard_count']}</p></article>
         </section>
         """
-        return _page("Dashboard", body)
+        return _page("Dashboard", body, workspace_id=workspace_id)
 
     def _home_page(self, workspace_id: str) -> str:
         workspace = self.ctx.workspace_service.get_workspace(workspace_id)
@@ -604,49 +611,164 @@ class Application:
                 </section>
                 {self._connect_folder_form(workspace_id, vault)}
                 """,
+                active="/home",
+                workspace_id=workspace_id,
             )
-        pages = index.get("pages", [])
+        pages = _content_pages(index)
+        categories = sorted(index.get("categories", {}).items(), key=lambda item: (-item[1], item[0]))
+        tags = sorted(index.get("tags", {}).items(), key=lambda item: (-item[1], item[0]))[:18]
+        recent_pages = sorted(pages, key=lambda page: page.get("updated_at") or "", reverse=True)[:8]
+        featured_pages = sorted(
+            [page for page in pages if page["kind"] != "source"],
+            key=lambda page: (
+                _feature_rank(page),
+                len(page.get("backlinks", [])),
+                len(page.get("source_refs", [])),
+                page.get("updated_at") or "",
+            ),
+            reverse=True,
+        )[:6]
+        warning_html = ""
+        if index.get("warnings"):
+            warning_html = "<article class='panel'><h2>Warnings</h2>" + "".join(
+                f"<div class='item'><p>{_e(warning)}</p></div>" for warning in index.get("warnings", [])
+            ) + "</article>"
+        category_cards = "".join(
+            f"""
+            <a class="category-card" href="/search?workspace_id={_e(workspace_id)}&q={_e(category)}">
+              <strong>{_e(category)}</strong>
+              <span>{count} pages</span>
+            </a>
+            """
+            for category, count in categories
+        ) or "<p class='empty'>No categories yet.</p>"
+        tag_cloud = "".join(
+            f"<a class='pill' href='/search?workspace_id={_e(workspace_id)}&q={_e(tag)}'>{_e(tag)} <span>{count}</span></a>"
+            for tag, count in tags
+        ) or "<p class='empty'>No tags yet.</p>"
         body = f"""
         <section class="hero">
           <p class="eyebrow">Wiki Home</p>
           <h1>{_e(workspace.title)}</h1>
-          <p class="lede">Source folder: <code>{_e(vault.source_root)}</code></p>
-          <form method="post" action="/actions/scan-folder"><input type="hidden" name="workspace_id" value="{_e(workspace_id)}" /><button type="submit">Scan Folder</button></form>
-          <form method="post" action="/actions/open-wiki-folder"><input type="hidden" name="workspace_id" value="{_e(workspace_id)}" /><button type="submit">Open Generated Wiki Folder</button></form>
+          <p class="lede">Course wiki generated from your local folder. Markdown is the source of truth; the app is the browser and organizer.</p>
+          <p class="muted">Source folder: <code>{_e(vault.source_root)}</code></p>
+          <form method="get" action="/search" class="searchbar">
+            <input type="hidden" name="workspace_id" value="{_e(workspace_id)}" />
+            <input name="q" placeholder="Search topics, weeks, assessments, methods..." />
+            <button type="submit">Search</button>
+          </form>
+          <div class="hero-actions">
+            <form method="post" action="/actions/scan-folder"><input type="hidden" name="workspace_id" value="{_e(workspace_id)}" /><button type="submit">Scan Folder</button></form>
+            <form method="post" action="/actions/open-wiki-folder"><input type="hidden" name="workspace_id" value="{_e(workspace_id)}" /><button type="submit">Open Generated Wiki Folder</button></form>
+          </div>
         </section>
-        <section class="grid">
-          <article class="panel"><h2>Build Status</h2><p>{_e(vault.last_build_status)}</p><p>{_e(vault.last_scan_at or 'never')}</p></article>
-          <article class="panel"><h2>Pages</h2><p>{len(pages)} generated pages</p></article>
-          <article class="panel"><h2>Warnings</h2><p>{len(index.get('warnings', []))} warnings</p></article>
+        <section class="stat-grid">
+          <article class="stat-card"><span class="stat-value">{len(pages)}</span><span class="stat-label">Generated Pages</span></article>
+          <article class="stat-card"><span class="stat-value">{len(categories)}</span><span class="stat-label">Categories</span></article>
+          <article class="stat-card"><span class="stat-value">{len(index.get('files', {}))}</span><span class="stat-label">Scanned Files</span></article>
+          <article class="stat-card"><span class="stat-value">{len(index.get('warnings', []))}</span><span class="stat-label">Warnings</span></article>
+        </section>
+        <section class="split">
+          <article class="panel">
+            <h2>Build Status</h2>
+            <div class="item"><strong>Status</strong><p>{_e(vault.last_build_status)}</p></div>
+            <div class="item"><strong>Last Scan</strong><p>{_e(vault.last_scan_at or 'never')}</p></div>
+            <div class="item"><strong>AI Mode</strong><p>{_e(index.get('ai_status', 'disabled'))}</p></div>
+          </article>
+          <article class="panel">
+            <h2>Popular Tags</h2>
+            <div class="pill-row">{tag_cloud}</div>
+          </article>
         </section>
         <section class="panel">
-          <h2>Wiki Index</h2>
-          <pre>{_e(self.ctx.wiki_service.read_page(workspace_id, '_index.md')) if pages else 'No wiki generated yet.'}</pre>
+          <h2>Categories</h2>
+          <div class="category-grid">{category_cards}</div>
+        </section>
+        <section class="split">
+          <article class="panel">
+            <h2>Recently Updated</h2>
+            {_render_page_list(workspace_id, recent_pages, empty_message="No recent pages yet.")}
+          </article>
+          <article class="panel">
+            <h2>Featured Pages</h2>
+            {_render_page_list(workspace_id, featured_pages, empty_message="No featured pages yet.")}
+          </article>
+        </section>
+        {warning_html}
+        <section class="panel">
+          <h2>Generated Wiki Overview</h2>
+          {_wiki_markdown_html(workspace_id, "_index.md", self.ctx.wiki_service.read_page(workspace_id, '_index.md'), index) if pages else '<p class="empty">No wiki generated yet.</p>'}
         </section>
         """
-        return _page("Home", body)
+        return _page("Home", body, active="/home", workspace_id=workspace_id)
+
+    def _search_page(self, workspace_id: str, q: str) -> str:
+        index = self.ctx.wiki_service.page_index(workspace_id)
+        pages = _content_pages(index)
+        needle = q.strip().lower()
+        if needle:
+            results = [
+                page for page in pages
+                if needle in (page.get("title") or "").lower()
+                or needle in (page.get("summary") or "").lower()
+                or needle in (page.get("category") or "").lower()
+                or any(needle in tag.lower() for tag in page.get("tags", []))
+            ]
+        else:
+            results = []
+        result_html = ""
+        if needle and not results:
+            result_html = "<p class='empty'>No matches.</p>"
+        elif results:
+            result_html = _render_page_list(workspace_id, results, empty_message="No matches.")
+        body = f"""
+        <section class="hero">
+          <p class="eyebrow">Search</p>
+          <h1>Search Wiki</h1>
+          <p class="lede">Search across titles, summaries, categories, and tags.</p>
+          <form method="get" action="/search" class="stacked">
+            <input type="hidden" name="workspace_id" value="{_e(workspace_id)}" />
+            <input name="q" placeholder="Search titles and summaries…" value="{_e(q)}" autofocus />
+            <button type="submit">Search</button>
+          </form>
+        </section>
+        <section class="panel">
+          <h2>{len(results)} result{'s' if len(results) != 1 else ''}</h2>
+          {result_html or "<p class='empty'>Type a query above.</p>"}
+        </section>
+        """
+        return _page("Search", body, active="/search", workspace_id=workspace_id)
 
     def _knowledge_page(self, workspace_id: str) -> str:
         nodes = self.ctx.compile_service.nodes.list_by_workspace(workspace_id)
         signals = self.ctx.signal_service.signals.list_by_workspace(workspace_id)
         patterns = self.ctx.signal_service.patterns.list_by_workspace(workspace_id)
         postcards = self.ctx.postcard_service.postcards.list_by_workspace(workspace_id)
-        body = "<section class='hero'><p class='eyebrow'>Knowledge</p><h1>Compiled Knowledge</h1></section>"
+        body = (
+            "<section class='hero'><p class='eyebrow'>Knowledge</p><h1>Compiled Knowledge</h1>"
+            f"<p class='lede'>{len(nodes)} nodes · {len(signals)} signals · {len(patterns)} patterns · {len(postcards)} postcards</p>"
+            "<div class='subnav'>"
+            "<a href='#nodes'>Nodes</a>"
+            "<a href='#signals'>Signals</a>"
+            "<a href='#patterns'>Patterns</a>"
+            "<a href='#postcards'>Postcards</a>"
+            "</div></section>"
+        )
         body += "<section class='grid'>"
-        body += "<article class='panel'><h2>Nodes</h2>" + "".join(
+        body += "<article class='panel' id='nodes'><h2>Nodes</h2>" + ("".join(
             f"<div class='item'><strong>{_e(node.title)}</strong><p>{_e(node.summary)}</p></div>" for node in nodes
-        ) + "</article>"
-        body += "<article class='panel'><h2>Capability Signals</h2>" + "".join(
+        ) or "<p class='empty'>No compiled nodes yet.</p>") + "</article>"
+        body += "<article class='panel' id='signals'><h2>Capability Signals</h2>" + ("".join(
             f"<div class='item'><strong>{_e(signal.topic)}</strong><p>{_e(signal.observed_practice)}</p></div>" for signal in signals
-        ) + "</article>"
-        body += "<article class='panel'><h2>Mistake Patterns</h2>" + "".join(
+        ) or "<p class='empty'>No capability signals detected.</p>") + "</article>"
+        body += "<article class='panel' id='patterns'><h2>Mistake Patterns</h2>" + ("".join(
             f"<div class='item'><strong>{_e(pattern.topic)}</strong><p>{_e(pattern.description)}</p></div>" for pattern in patterns
-        ) + "</article>"
-        body += "<article class='panel'><h2>Postcards</h2>" + "".join(
+        ) or "<p class='empty'>No mistake patterns logged.</p>") + "</article>"
+        body += "<article class='panel' id='postcards'><h2>Postcards</h2>" + ("".join(
             f"<div class='item'><strong>{_e(card.title)}</strong><p>{_e(card.card_type.value)}</p></div>" for card in postcards
-        ) + "</article>"
+        ) or "<p class='empty'>No postcards generated.</p>") + "</article>"
         body += "</section>"
-        return _page("Knowledge", body)
+        return _page("Knowledge", body, active="/knowledge", workspace_id=workspace_id)
 
     def _passport_page(self, workspace_id: str) -> str:
         passport = self.ctx.passport_service.passports.get_by_workspace(workspace_id)
@@ -662,7 +784,7 @@ class Application:
               </form>
             </section>
             """
-            return _page("Passport", body)
+            return _page("Passport", body, active="/passport", workspace_id=workspace_id)
         representative = tuple(
             card
             for card in self.ctx.postcard_service.postcards.list_by_workspace(workspace_id)
@@ -679,11 +801,11 @@ class Application:
           </form>
         </section>
         <section class="split">
-          <article class="panel"><h2>Human View</h2><pre>{_e(view)}</pre></article>
+          <article class="panel"><h2>Human View</h2>{_markdown_html(view)}</article>
           <article class="panel"><h2>Machine Manifest</h2><pre>{_e(json.dumps(passport.machine_manifest, indent=2, sort_keys=True))}</pre></article>
         </section>
         """
-        return _page("Passport", body)
+        return _page("Passport", body, active="/passport", workspace_id=workspace_id)
 
     def _mount_page(self, workspace_id: str) -> str:
         visas = self.ctx.mount_service.visas.list_by_workspace(workspace_id)
@@ -698,11 +820,11 @@ class Application:
           </form>
         </section>
         <section class="grid">
-          <article class="panel"><h2>Visa Bundles</h2>{"".join(self._visa_card(visa, workspace_id) for visa in visas) or "<p>No visas yet.</p>"}</article>
-          <article class="panel"><h2>Sessions</h2>{"".join(self._session_card(session, workspace_id) for session in sessions) or "<p>No sessions yet.</p>"}</article>
+          <article class="panel"><h2>Visa Bundles</h2>{"".join(self._visa_card(visa, workspace_id) for visa in visas) or "<p class='empty'>No visas issued yet.</p>"}</article>
+          <article class="panel"><h2>Sessions</h2>{"".join(self._session_card(session, workspace_id) for session in sessions) or "<p class='empty'>No sessions recorded yet.</p>"}</article>
         </section>
         """
-        return _page("Mount", body)
+        return _page("Mount", body, active="/mount", workspace_id=workspace_id)
 
     def _inbox_page(self, workspace_id: str) -> str:
         items = self.ctx.inbox_service.list_items(workspace_id=workspace_id)
@@ -727,12 +849,12 @@ class Application:
         </section>
         <section class="panel">
           <h2>Inbox Items</h2>
-          {"".join(self._inbox_item_card(item) for item in items) or "<p>No imports yet.</p>"}
+          {"".join(self._inbox_item_card(item) for item in items) or "<p class='empty'>No imports yet — add your first source above.</p>"}
         </section>
         """
-        return _page("Inbox", body)
+        return _page("Inbox", body, active="/inbox", workspace_id=workspace_id)
 
-    def _review_page(self) -> str:
+    def _review_page(self, workspace_id: str) -> str:
         candidates = self.ctx.review_service.candidates.list_all()
         items = []
         for candidate in candidates:
@@ -748,8 +870,8 @@ class Application:
                 f"<div class='item'><strong>{_e(candidate.id)}</strong><p>{_e(candidate.status.value)} -> {_e(candidate.target_object)}</p><pre>{_e(chr(10).join(diff.unified_diff))}</pre>{actions}</div>"
             )
         body = "<section class='hero'><p class='eyebrow'>Review</p><h1>Review Queue</h1></section>"
-        body += "<section class='panel'>" + ("".join(items) if items else "<p>No candidates.</p>") + "</section>"
-        return _page("Review", body)
+        body += "<section class='panel'>" + ("".join(items) if items else "<p class='empty'>No candidates waiting for review.</p>") + "</section>"
+        return _page("Review", body, active="/review", workspace_id=workspace_id)
 
     def _settings_page(self, workspace_id: str) -> str:
         workspace = self.ctx.workspace_service.get_workspace(workspace_id)
@@ -806,11 +928,11 @@ class Application:
           </article>
         </section>
         """
-        return _page("Settings", body)
+        return _page("Settings", body, active="/settings", workspace_id=workspace_id)
 
     def _wiki_category_page(self, workspace_id: str, kind: str, query: dict[str, list[str]]) -> str:
         index = self.ctx.wiki_service.page_index(workspace_id)
-        pages = [page for page in index.get("pages", []) if page["kind"] == kind]
+        pages = [page for page in _content_pages(index) if page["kind"] == kind]
         selected = _single(query, "page", default=pages[0]["path"] if pages else "")
         content = self.ctx.wiki_service.read_page(workspace_id, selected) if selected else "No pages yet. Scan your folder first."
         title = {
@@ -820,18 +942,36 @@ class Application:
             "method": "Methods",
             "question": "Questions",
         }[kind]
-        items = "".join(
-            f"<div class='item'><a href='/{title.lower()}?workspace_id={_e(workspace_id)}&page={_e(page['path'])}'>{_e(page['title'])}</a><p>{_e(page['summary'])}</p></div>"
-            for page in pages
-        ) or "<p>No generated pages yet.</p>"
+        selected_page = next((page for page in pages if page["path"] == selected), None)
+        tags = sorted(
+            {
+                tag
+                for page in pages
+                for tag in page.get("tags", [])
+            }
+        )[:16]
+        meta = ""
+        if selected_page is not None:
+            meta = (
+                "<div class='pill-row'>"
+                f"<span class='pill muted'>{_e(selected_page.get('category', 'General'))}</span>"
+                f"<span class='pill muted'>{_e(selected_page.get('difficulty', 'Intermediate'))}</span>"
+                + "".join(f"<span class='pill muted'>{_e(tag)}</span>" for tag in selected_page.get("tags", [])[:6])
+                + "</div>"
+            )
         body = f"""
-        <section class="hero"><p class="eyebrow">{_e(title)}</p><h1>{_e(title)}</h1></section>
+        <section class="hero">
+          <p class="eyebrow">{_e(title)}</p>
+          <h1>{_e(title)}</h1>
+          <p class="lede">{len(pages)} generated {title.lower()} pages.</p>
+          <div class="pill-row">{"".join(f"<a class='pill' href='/search?workspace_id={_e(workspace_id)}&q={_e(tag)}'>{_e(tag)}</a>" for tag in tags) or "<span class='pill muted'>No tags yet</span>"}</div>
+        </section>
         <section class="split">
-          <article class="panel"><h2>{_e(title)} Index</h2>{items}</article>
-          <article class="panel"><h2>{_e(selected or title)}</h2>{_markdown_html(content)}</article>
+          <article class="panel"><h2>{_e(title)} Index</h2>{_render_page_list(workspace_id, pages, empty_message='No generated pages yet.')}</article>
+          <article class="panel"><h2>{_e(selected_page['title'] if selected_page else title)}</h2>{meta}{_wiki_markdown_html(workspace_id, selected, content, index)}</article>
         </section>
         """
-        return _page(title, body)
+        return _page(title, body, active=f"/{title.lower()}", workspace_id=workspace_id)
 
     def _legacy_page(self, workspace_id: str) -> str:
         return _page(
@@ -849,6 +989,7 @@ class Application:
               <p><a href="/legacy/review?workspace_id={_e(workspace_id)}">Legacy Review</a></p>
             </section>
             """,
+            workspace_id=workspace_id,
         )
 
     def _connect_folder_form(self, workspace_id: str, vault) -> str:
@@ -959,19 +1100,24 @@ class Application:
         return [response[2]]
 
 
-def _page(title: str, body: str) -> str:
-    nav = """
-    <nav class="nav">
-      <a href="/home">Home</a>
-      <a href="/sources">Sources</a>
-      <a href="/topics">Topics</a>
-      <a href="/projects">Projects</a>
-      <a href="/methods">Methods</a>
-      <a href="/questions">Questions</a>
-      <a href="/settings">Settings</a>
-      <a href="/legacy">Advanced</a>
-    </nav>
-    """
+def _page(title: str, body: str, active: str = "", workspace_id: str | None = None) -> str:
+    links = [
+        ("/home", "Home"),
+        ("/sources", "Sources"),
+        ("/topics", "Topics"),
+        ("/projects", "Projects"),
+        ("/methods", "Methods"),
+        ("/questions", "Questions"),
+        ("/search", "Search"),
+        ("/settings", "Settings"),
+        ("/legacy", "Advanced"),
+    ]
+    suffix = f"?workspace_id={_e(workspace_id)}" if workspace_id else ""
+    nav_items = "".join(
+        f'<a href="{href}{suffix}" class="{"active" if href == active else ""}">{label}</a>'
+        for href, label in links
+    )
+    nav = f'<nav class="nav">{nav_items}</nav>'
     style = """
     <style>
       :root { --bg:#f2efe7; --ink:#1f2430; --accent:#8a3b12; --accent-soft:#f3d8c7; --panel:#fffdf8; --line:#d9cbb8; }
@@ -979,33 +1125,152 @@ def _page(title: str, body: str) -> str:
       body { margin:0; font-family:Georgia, 'Avenir Next', serif; background:radial-gradient(circle at top left,#fff7ef,transparent 35%),linear-gradient(180deg,#f4efe6,#efe9df); color:var(--ink); }
       .shell { max-width:1200px; margin:0 auto; padding:32px 24px 48px; }
       .nav { display:flex; gap:14px; padding:14px 18px; background:rgba(255,253,248,0.85); border:1px solid var(--line); border-radius:999px; backdrop-filter:blur(10px); position:sticky; top:16px; }
-      .nav a { color:var(--ink); text-decoration:none; font-size:14px; letter-spacing:0.04em; text-transform:uppercase; }
+      .nav a { color:var(--ink); text-decoration:none; font-size:14px; letter-spacing:0.04em; text-transform:uppercase; padding:6px 12px; border-radius:999px; transition:background 0.15s, color 0.15s; }
+      .nav a:hover { background:var(--accent-soft); }
+      .nav a.active { background:var(--accent); color:#fffaf3; }
       .hero { padding:36px 0 20px; }
       .eyebrow { letter-spacing:0.18em; text-transform:uppercase; color:var(--accent); font-size:12px; margin:0 0 10px; }
       h1 { margin:0 0 10px; font-size:48px; line-height:1; }
       .lede { max-width:760px; font-size:18px; line-height:1.5; }
+      .muted { color:#7a6a55; }
       .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:18px; }
       .split { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:18px; }
+      .stat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin:0 0 18px; }
+      .stat-card { background:linear-gradient(180deg,#fffdf8,#f8f1e7); border:1px solid var(--line); border-radius:22px; padding:18px; box-shadow:0 12px 28px rgba(79,50,22,0.08); }
+      .stat-value { display:block; font-size:34px; line-height:1; font-weight:700; color:var(--accent); }
+      .stat-label { display:block; margin-top:8px; text-transform:uppercase; letter-spacing:0.06em; font-size:12px; color:#7a6a55; }
       .panel { background:var(--panel); border:1px solid var(--line); border-radius:24px; padding:22px; box-shadow:0 18px 48px rgba(79,50,22,0.08); }
       .item { padding:12px 0; border-top:1px solid rgba(0,0,0,0.07); }
       .item:first-child { border-top:none; padding-top:0; }
-      button { border:none; border-radius:999px; padding:10px 16px; background:var(--accent); color:white; font-weight:600; cursor:pointer; }
+      .item strong { display:block; margin-bottom:4px; }
+      .item p { margin:0; }
+      .hero-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+      .searchbar { display:flex; gap:10px; max-width:760px; margin-top:16px; }
+      .searchbar input { flex:1; }
+      .category-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; }
+      .category-card { display:block; text-decoration:none; background:linear-gradient(180deg,rgba(255,253,248,0.95),#f8f1e7); border:1px solid var(--line); border-radius:18px; padding:16px; }
+      .category-card strong { display:block; color:var(--ink); margin-bottom:6px; }
+      .category-card span { color:#7a6a55; font-size:13px; }
+      .pill-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+      .pill { display:inline-flex; align-items:center; gap:8px; text-decoration:none; border:1px solid var(--line); background:#fffaf3; color:var(--ink); border-radius:999px; padding:7px 12px; font-size:13px; }
+      .pill span { color:#7a6a55; font-size:12px; }
+      .pill.muted { color:#7a6a55; background:#f8f1e7; }
+      button { border:none; border-radius:999px; padding:10px 18px; background:var(--accent); color:white; font-weight:600; cursor:pointer; transition:transform 0.1s ease, box-shadow 0.15s ease, background 0.15s; box-shadow:0 6px 16px rgba(138,59,18,0.18); }
+      button:hover { background:#a0481b; transform:translateY(-1px); box-shadow:0 10px 22px rgba(138,59,18,0.24); }
+      button:active { transform:translateY(0); box-shadow:0 4px 10px rgba(138,59,18,0.18); }
+      .panel { transition:transform 0.15s ease, box-shadow 0.2s ease; }
+      .panel:hover { transform:translateY(-2px); box-shadow:0 24px 56px rgba(79,50,22,0.12); }
+      .empty { color:#7a6a55; font-style:italic; padding:14px 0; }
+      .subnav { display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
+      .subnav a { padding:6px 14px; border-radius:999px; background:rgba(255,253,248,0.7); border:1px solid var(--line); text-decoration:none; font-size:13px; letter-spacing:0.04em; text-transform:uppercase; color:var(--ink); }
+      .subnav a:hover { background:var(--accent-soft); color:var(--accent); }
+      .panel:target { outline:2px solid var(--accent); outline-offset:4px; animation:flash 1.2s ease-out; }
+      @keyframes flash { 0% { background:var(--accent-soft); } 100% { background:var(--panel); } }
+      .flash { background:var(--accent-soft); border:1px solid var(--accent); color:var(--accent); padding:12px 18px; border-radius:14px; margin-bottom:18px; font-weight:600; }
+      a { color:var(--accent); }
+      a:hover { color:#a0481b; }
       form { display:inline-block; margin-right:8px; margin-top:8px; }
       .stacked { display:grid; gap:10px; max-width:720px; }
       input, select, textarea { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:14px; background:#fffaf3; font:inherit; }
       textarea { min-height:160px; }
       pre { white-space:pre-wrap; word-break:break-word; background:#f8f1e7; padding:12px; border-radius:16px; font-family:'SFMono-Regular',Menlo,monospace; font-size:12px; }
-      @media (max-width: 720px) { h1 { font-size:34px; } .nav { overflow:auto; } }
+      @media (max-width: 720px) { h1 { font-size:34px; } .nav { overflow-x:auto; flex-wrap:nowrap; mask-image:linear-gradient(90deg,#000 85%,transparent); -webkit-mask-image:linear-gradient(90deg,#000 85%,transparent); } .nav a { flex:none; } .shell { padding:18px 14px 32px; } .searchbar { flex-direction:column; } }
     </style>
     """
     return f"<!doctype html><html><head><meta charset='utf-8'><title>{_e(title)}</title>{style}</head><body><div class='shell'>{nav}{body}</div></body></html>"
+
+
+def _content_pages(index: dict[str, object]) -> list[dict[str, object]]:
+    return [
+        page
+        for page in index.get("pages", [])
+        if page.get("kind") not in {"index"} and not str(page.get("kind", "")).endswith("_index")
+    ]
+
+
+def _feature_rank(page: dict[str, object]) -> int:
+    order = {
+        "project": 5,
+        "topic": 4,
+        "method": 3,
+        "question": 2,
+        "source": 1,
+    }
+    return order.get(str(page.get("kind")), 0)
+
+
+def _route_for_kind(kind: str) -> str:
+    routes = {
+        "source": "/sources",
+        "topic": "/topics",
+        "project": "/projects",
+        "method": "/methods",
+        "question": "/questions",
+        "index": "/home",
+    }
+    if kind.endswith("_index"):
+        return routes.get(kind[:-6], "/home")
+    return routes.get(kind, "/home")
+
+
+def _wiki_href(workspace_id: str, page: dict[str, object]) -> str:
+    route = _route_for_kind(str(page.get("kind", "index")))
+    if route == "/home" and page.get("path") == "_index.md":
+        return f"/home?workspace_id={_e(workspace_id)}"
+    if route == "/home":
+        return f"/home?workspace_id={_e(workspace_id)}"
+    if str(page.get("kind", "")).endswith("_index"):
+        return f"{route}?workspace_id={_e(workspace_id)}"
+    return f"{route}?workspace_id={_e(workspace_id)}&page={_e(page.get('path', ''))}"
+
+
+def _render_page_list(workspace_id: str, pages: list[dict[str, object]], *, empty_message: str) -> str:
+    if not pages:
+        return f"<p class='empty'>{_e(empty_message)}</p>"
+    rows = []
+    for page in pages:
+        pills = [
+            f"<span class='pill muted'>{_e(page.get('kind', 'page').title())}</span>",
+            f"<span class='pill muted'>{_e(page.get('category', 'General'))}</span>",
+        ]
+        if page.get("difficulty"):
+            pills.append(f"<span class='pill muted'>{_e(page['difficulty'])}</span>")
+        for tag in page.get("tags", [])[:3]:
+            pills.append(f"<span class='pill muted'>{_e(tag)}</span>")
+        updated = page.get("updated_at") or "unknown"
+        rows.append(
+            f"""
+            <div class="item">
+              <a href="{_wiki_href(workspace_id, page)}"><strong>{_e(page.get('title', 'Untitled'))}</strong></a>
+              <p>{_e(page.get('summary', ''))}</p>
+              <p class="muted">Updated: {_e(updated)}</p>
+              <div class="pill-row">{''.join(pills)}</div>
+            </div>
+            """
+        )
+    return "".join(rows)
+
+
+def _wiki_markdown_html(workspace_id: str, current_path: str, markdown: str, index: dict[str, object]) -> str:
+    pages = {str(page.get("path")): page for page in index.get("pages", [])}
+
+    def resolve(href: str) -> str:
+        if href.startswith(("http://", "https://", "mailto:", "#", "/")):
+            return href
+        normalized = posixpath.normpath(posixpath.join(posixpath.dirname(current_path or "_index.md"), href))
+        page = pages.get(normalized)
+        if page is None:
+            return href
+        return _wiki_href(workspace_id, page)
+
+    return _markdown_html(markdown, resolve)
 
 
 def _e(value: object) -> str:
     return html.escape(str(value))
 
 
-def _markdown_html(markdown: str) -> str:
+def _markdown_html(markdown: str, link_resolver: Callable[[str], str] | None = None) -> str:
     lines = markdown.splitlines()
     html_lines: list[str] = []
     in_list = False
@@ -1038,26 +1303,29 @@ def _markdown_html(markdown: str) -> str:
             if not in_list:
                 html_lines.append("<ul>")
                 in_list = True
-            html_lines.append(f"<li>{_markdown_inline(stripped[2:])}</li>")
+            html_lines.append(f"<li>{_markdown_inline(stripped[2:], link_resolver)}</li>")
             continue
         if in_list:
             html_lines.append("</ul>")
             in_list = False
-        html_lines.append(f"<p>{_markdown_inline(stripped)}</p>")
+        html_lines.append(f"<p>{_markdown_inline(stripped, link_resolver)}</p>")
     if in_list:
         html_lines.append("</ul>")
     return "".join(html_lines)
 
 
-def _markdown_inline(text: str) -> str:
+def _markdown_inline(text: str, link_resolver: Callable[[str], str] | None = None) -> str:
     escaped = _e(text)
-    return re_sub_links(escaped)
+    return re_sub_links(escaped, link_resolver)
 
 
-def re_sub_links(text: str) -> str:
+def re_sub_links(text: str, link_resolver: Callable[[str], str] | None = None) -> str:
     return __import__("re").sub(
         r"\[([^\]]+)\]\(([^)]+)\)",
-        lambda match: f"<a href='{_e(match.group(2))}'>{_e(match.group(1))}</a>",
+        lambda match: (
+            f"<a href='{_e(link_resolver(html.unescape(match.group(2))) if link_resolver else html.unescape(match.group(2)))}'>"
+            f"{_e(html.unescape(match.group(1)))}</a>"
+        ),
         text,
     )
 
