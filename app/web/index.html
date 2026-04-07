@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Knowledge Wiki</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-book-open"></i>
+                <span id="siteTitle">Knowledge Wiki</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#overview" class="nav-link">Overview</a></li>
+                <li><a href="#categories" class="nav-link">Categories</a></li>
+                <li><a href="#featured" class="nav-link">Featured</a></li>
+                <li><a href="#recent" class="nav-link">Recent</a></li>
+                <li><a href="#learning" class="nav-link">Learning Path</a></li>
+                <li><a href="#examples" class="nav-link">Examples</a></li>
+                <li><a href="#quiz" class="nav-link">Quiz</a></li>
+                <li><a href="#resources" class="nav-link">Resources</a></li>
+                <li><a href="wiki.html" id="wikiNavLink" class="nav-link wiki-nav-link"><i class="fas fa-layer-group" style="margin-right:4px"></i>Wiki</a></li>
+            </ul>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <section id="home" class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title" id="heroTitle">Local Knowledge Wiki</h1>
+                <p class="hero-subtitle" id="heroSubtitle">Scan a local folder, turn it into structured Markdown, and browse it through a polished web reader.</p>
+                <div class="hero-buttons">
+                    <a class="btn btn-primary" id="openWikiButton" href="wiki.html">Open Wiki</a>
+                    <a class="btn btn-secondary" id="legacyButton" href="/home">Legacy Browser</a>
+                </div>
+                <p id="heroMeta" class="hero-meta"></p>
+            </div>
+            <div class="hero-visual">
+                <div class="ai-animation">
+                    <div class="neural-network">
+                        <div class="node"></div>
+                        <div class="node"></div>
+                        <div class="node"></div>
+                        <div class="connection"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="overview" class="section">
+        <div class="container">
+            <h2 class="section-title">Workspace Overview</h2>
+            <div class="content-grid" id="overviewGrid">
+                <div class="content-card">
+                    <div class="card-icon"><i class="fas fa-file-alt"></i></div>
+                    <h3 id="statPages">0</h3>
+                    <p>Generated pages</p>
+                </div>
+                <div class="content-card">
+                    <div class="card-icon"><i class="fas fa-folder-tree"></i></div>
+                    <h3 id="statCategories">0</h3>
+                    <p>Categories</p>
+                </div>
+                <div class="content-card">
+                    <div class="card-icon"><i class="fas fa-database"></i></div>
+                    <h3 id="statSources">0</h3>
+                    <p>Source files</p>
+                </div>
+                <div class="content-card">
+                    <div class="card-icon"><i class="fas fa-tag"></i></div>
+                    <h3 id="statTopTag">—</h3>
+                    <p>Top recurring tag</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="categories" class="section bg-light">
+        <div class="container">
+            <h2 class="section-title">Browse by Category</h2>
+            <div class="content-grid" id="categoryCards">
+                <div class="content-card">
+                    <div class="card-icon"><i class="fas fa-spinner"></i></div>
+                    <h3>Loading...</h3>
+                    <p>Building category overview from your wiki.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="featured" class="section">
+        <div class="container">
+            <h2 class="section-title">Featured Pages</h2>
+            <div class="examples-grid" id="featuredGrid">
+                <div class="example-card">
+                    <h3>Preparing featured pages</h3>
+                    <p>Featured content will appear here once the site context loads.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="recent" class="section bg-light">
+        <div class="container">
+            <h2 class="section-title">Recently Updated</h2>
+            <div class="resources-grid" id="recentGrid">
+                <div class="resource-card">
+                    <div class="resource-icon"><i class="fas fa-clock"></i></div>
+                    <h3>Loading updates</h3>
+                    <ul>
+                        <li>Recent pages will appear here.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Learning Path Section -->
+    <section id="learning" class="section bg-light">
+        <div class="container">
+            <h2 class="section-title">Your Learning Path</h2>
+            <div class="learning-path">
+                <div class="path-step active" data-step="1">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Foundation</h3>
+                        <p>Connect your local folder and let the system scan it</p>
+                    </div>
+                </div>
+                <div class="path-step" data-step="2">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Browse Categories</h3>
+                        <p>Explore generated wiki pages organised by category</p>
+                    </div>
+                </div>
+                <div class="path-step" data-step="3">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Search & Link</h3>
+                        <p>Use search and backlinks to navigate your knowledge graph</p>
+                    </div>
+                </div>
+                <div class="path-step" data-step="4">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>Iterate</h3>
+                        <p>Add new files, rescan, and watch your wiki grow</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 3rem;">
+                <h3 style="text-align: center; margin-bottom: 2rem;">The Evolution of Knowledge Tools</h3>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-year">1945</div>
+                        <div class="timeline-content">
+                            <h4>Memex</h4>
+                            <p>Vannevar Bush imagines a personal device for storing and linking books, records and communications.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-year">1980s</div>
+                        <div class="timeline-content">
+                            <h4>Hypertext</h4>
+                            <p>Ted Nelson and others popularize linked documents — the seed of every wiki and web browser today.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-year">1995</div>
+                        <div class="timeline-content">
+                            <h4>WikiWikiWeb</h4>
+                            <p>Ward Cunningham launches the first wiki, letting anyone edit interconnected pages collaboratively.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-year">2010s</div>
+                        <div class="timeline-content">
+                            <h4>Personal Knowledge Graphs</h4>
+                            <p>Tools like Roam, Obsidian, and Logseq make backlinks and graph views mainstream for individuals.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-year">2020s</div>
+                        <div class="timeline-content">
+                            <h4>Local-first AI Wikis</h4>
+                            <p>Your notes, PDFs, and folders become structured knowledge bases — without leaving your machine.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Examples Section -->
+    <section id="examples" class="section">
+        <div class="container">
+            <h2 class="section-title">Interactive Examples</h2>
+            <div class="examples-grid">
+                <div class="example-card">
+                    <h3>Quick Search</h3>
+                    <p>Try searching your knowledge base right from here</p>
+                    <div class="demo-container">
+                        <div class="chat-interface">
+                            <div class="chat-input">
+                                <input type="text" id="quickSearchInput" placeholder="Type a query…" />
+                                <button onclick="quickSearch()">Search</button>
+                            </div>
+                            <div class="chat-messages" id="quickSearchResults">
+                                <div class="message bot-message">Results will appear here.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="example-card">
+                    <h3>Random Page</h3>
+                    <p>Open a random wiki page to discover something</p>
+                    <div class="demo-container">
+                        <div class="decision-scenario">
+                            <button class="btn btn-primary" onclick="openRandomPage()">Surprise Me</button>
+                            <div id="randomPageResult" class="decision-result"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="example-card">
+                    <h3>Tag Browser</h3>
+                    <p>Pick a popular tag and jump straight into the wiki</p>
+                    <div class="demo-container">
+                        <div class="task-planner">
+                            <div id="tagButtons" class="tag-buttons"><em>Loading tags…</em></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quiz Section -->
+    <section id="quiz" class="section bg-light">
+        <div class="container">
+            <h2 class="section-title">Test Your Knowledge</h2>
+            <div class="quiz-container">
+                <div class="quiz-card" id="quizCard">
+                    <div class="quiz-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <span class="progress-text" id="progressText">Question 1 of 5</span>
+                    </div>
+                    <div class="quiz-question" id="quizQuestion">
+                        <h3>What is the primary characteristic of a local-first knowledge wiki?</h3>
+                    </div>
+                    <div class="quiz-options" id="quizOptions">
+                        <button class="quiz-option" onclick="selectAnswer(0)">It runs entirely in the cloud</button>
+                        <button class="quiz-option" onclick="selectAnswer(1)">Your notes stay on your machine and you own the data</button>
+                        <button class="quiz-option" onclick="selectAnswer(2)">It requires a paid subscription</button>
+                        <button class="quiz-option" onclick="selectAnswer(3)">It only works offline, never online</button>
+                    </div>
+                    <div class="quiz-result" id="quizResult" style="display: none;">
+                        <h3>Quiz Completed!</h3>
+                        <p id="resultText"></p>
+                        <button class="btn btn-primary" onclick="restartQuiz()">Restart Quiz</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Resources Section -->
+    <section id="resources" class="section">
+        <div class="container">
+            <h2 class="section-title">Learning Resources</h2>
+            <div class="resources-grid">
+                <div class="resource-card">
+                    <div class="resource-icon"><i class="fas fa-book"></i></div>
+                    <h3>Recommended Reading</h3>
+                    <ul>
+                        <li>"As We May Think" — Vannevar Bush</li>
+                        <li>"How to Take Smart Notes" — Sönke Ahrens</li>
+                        <li>"Building a Second Brain" — Tiago Forte</li>
+                    </ul>
+                </div>
+                <div class="resource-card">
+                    <div class="resource-icon"><i class="fas fa-video"></i></div>
+                    <h3>Talks & Videos</h3>
+                    <ul>
+                        <li>Andy Matuschak — Evergreen Notes</li>
+                        <li>Maggie Appleton — Tools for Thought</li>
+                        <li>Karpathy — LLM Wiki concept</li>
+                    </ul>
+                </div>
+                <div class="resource-card">
+                    <div class="resource-icon"><i class="fas fa-code"></i></div>
+                    <h3>Related Tools</h3>
+                    <ul>
+                        <li>Obsidian</li>
+                        <li>Logseq</li>
+                        <li>Roam Research</li>
+                    </ul>
+                </div>
+                <div class="resource-card">
+                    <div class="resource-icon"><i class="fas fa-users"></i></div>
+                    <h3>Communities</h3>
+                    <ul>
+                        <li>r/PKMS</li>
+                        <li>Tools for Thought Discord</li>
+                        <li>Obsidian Forum</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>About This Wiki</h3>
+                    <p id="footerAbout">This wiki is generated locally from your own notes, PDFs, and text files. Markdown stays canonical; the web app is the reader.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="#overview">Overview</a></li>
+                        <li><a href="#categories">Categories</a></li>
+                        <li><a id="footerWikiLink" href="wiki.html">Open Wiki</a></li>
+                        <li><a id="footerLegacyLink" href="/home">Legacy Browser</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Current Source</h3>
+                    <p id="sourceRootDisplay">No source folder connected.</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p id="footerStatus">Local-first knowledge system.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

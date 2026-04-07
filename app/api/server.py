@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Callable
 from urllib.parse import parse_qs
+from urllib.parse import urlencode
 
 from app.api.workspaces import ActiveWorkspaceState, WorkspaceAPI, WorkspaceService
 from app.compile.review import KnowledgeNodeReviewService
@@ -242,8 +243,12 @@ class Application:
         query = parse_qs(str(environ.get("QUERY_STRING", "")), keep_blank_values=True)
         try:
             if path == "/":
-                return self._redirect("/home", start_response)
-            if path.startswith("/api/"):
+                return self._redirect(self._web_entry_url("index.html", query), start_response)
+            if path == "/wiki":
+                return self._redirect(self._web_entry_url("wiki.html", query), start_response)
+            if path.startswith("/web/"):
+                status, headers, body = self._handle_web(method, path, query, environ)
+            elif path.startswith("/api/"):
                 status, headers, body = self._handle_api(method, path, query, environ)
             else:
                 status, headers, body = self._handle_ui(method, path, query, environ)
@@ -420,6 +425,177 @@ class Application:
             payload = self.ctx.export_restore_service.restore_workspace(Path(data["path"]))
             return self._json_response(200, payload)
         raise KeyError(path)
+
+    _WEB_ROOT = Path(__file__).resolve().parent.parent / "web"
+    _WEB_MIME = {
+        ".html": "text/html; charset=utf-8",
+        ".css": "text/css; charset=utf-8",
+        ".js": "application/javascript; charset=utf-8",
+        ".json": "application/json; charset=utf-8",
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".svg": "image/svg+xml",
+        ".ico": "image/x-icon",
+        ".woff2": "font/woff2",
+        ".map": "application/json",
+    }
+
+    def _handle_web(
+        self,
+        method: str,
+        path: str,
+        query: dict[str, list[str]],
+        environ: dict[str, object],
+    ) -> tuple[str, list[tuple[str, str]], bytes]:
+        relative = path[len("/web/"):]
+        if method == "POST" and relative == "api/rescan":
+            return self._rescan_response(query, environ)
+        if method != "GET":
+            return self._json_response(405, {"error": "method not allowed"})
+        if relative == "api/site_context":
+            return self._site_context_response(query)
+        if relative.startswith("tables/wiki_articles"):
+            return self._wiki_articles_response(query)
+        # Resolve safely under _WEB_ROOT
+        target = (self._WEB_ROOT / relative).resolve()
+        try:
+            target.relative_to(self._WEB_ROOT.resolve())
+        except ValueError:
+            return self._json_response(403, {"error": "forbidden"})
+        if not target.is_file():
+            return self._json_response(404, {"error": "not found"})
+        mime = self._WEB_MIME.get(target.suffix.lower(), "application/octet-stream")
+        body = target.read_bytes()
+        return "200 OK", [("Content-Type", mime), ("Content-Length", str(len(body)))], body
+
+    def _site_context_response(self, query: dict[str, list[str]]) -> tuple[str, list[tuple[str, str]], bytes]:
+        workspace_id = self._workspace_id_from_query(query)
+        payload: dict[str, object] = {
+            "workspace_id": workspace_id,
+            "workspace_title": "",
+            "source_root": "",
+            "wiki_root": "",
+            "last_build_status": "not_started",
+            "last_scan_at": None,
+            "page_count": 0,
+            "source_file_count": 0,
+            "category_count": 0,
+            "categories": {},
+            "tags": {},
+            "featured": [],
+            "recent": [],
+        }
+        if not workspace_id:
+            return self._json_response(200, payload)
+        workspace = self.ctx.workspace_service.get_workspace(workspace_id)
+        vault = self.ctx.wiki_service.get_or_create_vault(workspace_id)
+        index = self.ctx.wiki_service.page_index(workspace_id)
+        pages = _content_pages(index)
+        featured = sorted(
+            [page for page in pages if page.get("kind") != "source"],
+            key=lambda page: (
+                _feature_rank(page),
+                len(page.get("backlinks", [])),
+                len(page.get("source_refs", [])),
+                page.get("updated_at") or "",
+            ),
+            reverse=True,
+        )[:6]
+        recent = sorted(pages, key=lambda page: page.get("updated_at") or "", reverse=True)[:8]
+        payload.update(
+            {
+                "workspace_id": workspace_id,
+                "workspace_title": workspace.title,
+                "source_root": vault.source_root or "",
+                "wiki_root": vault.wiki_root,
+                "last_build_status": vault.last_build_status,
+                "last_scan_at": vault.last_scan_at,
+                "page_count": len(pages),
+                "source_file_count": len(index.get("files", {})),
+                "category_count": len(index.get("categories", {})),
+                "categories": index.get("categories", {}),
+                "tags": index.get("tags", {}),
+                "featured": featured,
+                "recent": recent,
+            }
+        )
+        return self._json_response(200, payload)
+
+    def _rescan_response(self, query: dict[str, list[str]], environ: dict[str, object]) -> tuple[str, list[tuple[str, str]], bytes]:
+        workspace_id = self._workspace_id_from_query(query)
+        if not workspace_id:
+            return self._json_response(400, {"error": "no workspace configured"})
+        try:
+            result = self.ctx.wiki_service.scan_and_build(workspace_id)
+        except Exception as exc:  # surface to UI
+            return self._json_response(500, {"error": str(exc)})
+        return self._json_response(200, {
+            "workspace_id": workspace_id,
+            "scanned_file_count": getattr(result, "scanned_file_count", None),
+            "generated_at": getattr(result, "generated_at", None),
+        })
+
+    def _wiki_articles_response(self, query: dict[str, list[str]]) -> tuple[str, list[tuple[str, str]], bytes]:
+        workspace_id = self._workspace_id_from_query(query)
+        articles: list[dict[str, object]] = []
+        if workspace_id:
+            index = self.ctx.wiki_service.page_index(workspace_id)
+            pages = _content_pages(index)
+            slug_by_path = {
+                str(page["path"]): self._slugify(f"{page.get('kind', 'page')}-{page.get('title') or page.get('path')}")
+                for page in pages
+            }
+            for page in pages:
+                rel_path = page["path"]
+                try:
+                    content = self.ctx.wiki_service.read_page(workspace_id, rel_path)
+                except KeyError:
+                    content = ""
+                tags = list(page.get("tags") or [])
+                kind = page.get("kind") or "topic"
+                links_to = []
+                for href in _extract_markdown_links(content):
+                    normalized = posixpath.normpath(posixpath.join(posixpath.dirname(rel_path), href))
+                    if normalized in slug_by_path:
+                        links_to.append(slug_by_path[normalized])
+                backlink_slugs = [
+                    slug_by_path[target]
+                    for target in page.get("backlinks", [])
+                    if target in slug_by_path
+                ]
+                articles.append({
+                    "id": rel_path,
+                    "path": rel_path,
+                    "title": page.get("title") or rel_path,
+                    "slug": slug_by_path[rel_path],
+                    "summary": page.get("summary") or "",
+                    "content": content,
+                    "category": page.get("category") or "Reference",
+                    "kind": kind,
+                    "tags": tags,
+                    "backlinks": backlink_slugs,
+                    "links_to": sorted(set(links_to)),
+                    "difficulty": page.get("difficulty") or "Intermediate",
+                    "word_count": len(content.split()),
+                    "last_edited": page.get("updated_at") or page.get("created_at") or "",
+                    "status": "Published",
+                })
+        body = json.dumps({"data": articles, "total": len(articles)}).encode("utf-8")
+        return "200 OK", [("Content-Type", "application/json; charset=utf-8"), ("Content-Length", str(len(body)))], body
+
+    def _workspace_id_from_query(self, query: dict[str, list[str]]) -> str:
+        return _single(query, "workspace_id", default=self._default_workspace_id() if self.ctx.workspace_service.list_workspaces() else "")
+
+    def _web_entry_url(self, filename: str, query: dict[str, list[str]]) -> str:
+        workspace_id = self._workspace_id_from_query(query)
+        if not workspace_id:
+            return f"/web/{filename}"
+        return f"/web/{filename}?{urlencode({'workspace_id': workspace_id})}"
+
+    @staticmethod
+    def _slugify(text: str) -> str:
+        slug = __import__("re").sub(r"[^a-zA-Z0-9]+", "-", text.strip().lower()).strip("-")
+        return slug or "untitled"
 
     def _handle_ui(
         self,
@@ -1328,6 +1504,13 @@ def re_sub_links(text: str, link_resolver: Callable[[str], str] | None = None) -
         ),
         text,
     )
+
+
+def _extract_markdown_links(markdown: str) -> list[str]:
+    return [
+        html.unescape(match.group(2))
+        for match in __import__("re").finditer(r"\[([^\]]+)\]\(([^)]+)\)", markdown)
+    ]
 
 
 def serialize_build_result(result) -> dict[str, object]:

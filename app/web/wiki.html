@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Knowledge Wiki</title>
+    <link rel="stylesheet" href="css/wiki.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <!-- Marked.js for Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <!-- Top Bar -->
+    <header class="wiki-topbar">
+        <div class="topbar-left">
+            <button class="sidebar-toggle" id="sidebarToggle" title="Toggle Sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+            <a href="wiki.html" class="wiki-brand" id="wikiBrandLink">
+                <i class="fas fa-book-open"></i>
+                <span class="brand-text"><span id="wikiBrandTitle">Local Knowledge</span> <strong>Wiki</strong></span>
+            </a>
+            <span class="wiki-badge">Knowledge Base</span>
+        </div>
+        <div class="topbar-center">
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="searchInput" class="search-input" placeholder="Search articles... (Ctrl+K)" autocomplete="off">
+                <kbd class="search-shortcut">Ctrl+K</kbd>
+                <div class="search-results" id="searchResults"></div>
+            </div>
+        </div>
+        <div class="topbar-right">
+            <a href="index.html" class="topbar-link" id="mainSiteLink" title="Back to Main Site">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <button class="topbar-btn" id="themeToggle" title="Toggle Theme">
+                <i class="fas fa-moon"></i>
+            </button>
+            <div class="wiki-stats" id="wikiStats">
+                <span class="stat"><i class="fas fa-file-alt"></i> <span id="articleCount">0</span></span>
+                <span class="stat"><i class="fas fa-tags"></i> <span id="categoryCount">0</span></span>
+            </div>
+        </div>
+    </header>
+
+    <div class="wiki-layout">
+        <!-- Sidebar -->
+        <aside class="wiki-sidebar" id="wikiSidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-header">
+                    <i class="fas fa-compass"></i>
+                    <span>Navigation</span>
+                </div>
+                <nav class="sidebar-nav">
+                    <a href="#" class="sidebar-link active" data-view="home">
+                        <i class="fas fa-house"></i>
+                        <span>Home</span>
+                    </a>
+                    <a href="#" class="sidebar-link" data-view="all">
+                        <i class="fas fa-list"></i>
+                        <span>All Articles</span>
+                    </a>
+                    <a href="#" class="sidebar-link" data-view="graph">
+                        <i class="fas fa-project-diagram"></i>
+                        <span>Knowledge Graph</span>
+                    </a>
+                    <a href="#" class="sidebar-link" data-view="recent">
+                        <i class="fas fa-clock"></i>
+                        <span>Recently Updated</span>
+                    </a>
+                </nav>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-header">
+                    <i class="fas fa-folder-tree"></i>
+                    <span>Categories</span>
+                </div>
+                <div class="category-list" id="categoryList">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-header">
+                    <i class="fas fa-signal"></i>
+                    <span>By Difficulty</span>
+                </div>
+                <div class="difficulty-list" id="difficultyList">
+                    <a href="#" class="difficulty-badge beginner" data-difficulty="Beginner">
+                        <i class="fas fa-seedling"></i> Beginner
+                    </a>
+                    <a href="#" class="difficulty-badge intermediate" data-difficulty="Intermediate">
+                        <i class="fas fa-bolt"></i> Intermediate
+                    </a>
+                    <a href="#" class="difficulty-badge advanced" data-difficulty="Advanced">
+                        <i class="fas fa-fire"></i> Advanced
+                    </a>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-header">
+                    <i class="fas fa-tags"></i>
+                    <span>Popular Tags</span>
+                </div>
+                <div class="tag-cloud" id="tagCloud">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-header">
+                    <i class="fas fa-screwdriver-wrench"></i>
+                    <span>Workspace</span>
+                </div>
+                <div class="workspace-controls">
+                    <p class="workspace-source" id="workspaceSource">Loading…</p>
+                    <button type="button" class="workspace-btn" id="rescanBtn">
+                        <i class="fas fa-rotate"></i> <span>Rescan source folder</span>
+                    </button>
+                    <p class="workspace-status" id="rescanStatus"></p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="wiki-main" id="wikiMain">
+            <!-- Home View -->
+            <div class="wiki-view" id="homeView">
+                <div class="wiki-home-hero">
+                    <div class="home-hero-content">
+                        <h1><i class="fas fa-brain"></i> <span id="wikiHeroTitle">Local Knowledge Wiki</span></h1>
+                        <p id="wikiHeroDescription">A local-first knowledge base generated from your own folders, notes, and PDFs.</p>
+                        <div class="home-stats-row">
+                            <div class="home-stat">
+                                <span class="home-stat-num" id="homeArticleCount">0</span>
+                                <span class="home-stat-label">Articles</span>
+                            </div>
+                            <div class="home-stat">
+                                <span class="home-stat-num" id="homeCategoryCount">0</span>
+                                <span class="home-stat-label">Categories</span>
+                            </div>
+                            <div class="home-stat">
+                                <span class="home-stat-num" id="homeWordCount">0</span>
+                                <span class="home-stat-label">Words</span>
+                            </div>
+                            <div class="home-stat">
+                                <span class="home-stat-num" id="homeBacklinkCount">0</span>
+                                <span class="home-stat-label">Cross-links</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="home-categories-grid" id="homeCategoriesGrid">
+                    <!-- Populated by JS -->
+                </div>
+
+                <div class="home-section">
+                    <h2><i class="fas fa-clock"></i> Recently Updated</h2>
+                    <div class="article-list" id="homeRecentList">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <div class="home-section">
+                    <h2><i class="fas fa-star"></i> Featured Articles</h2>
+                    <div class="featured-grid" id="homeFeaturedGrid">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Article List View -->
+            <div class="wiki-view hidden" id="listView">
+                <div class="list-header">
+                    <h2 id="listTitle">All Articles</h2>
+                    <div class="list-controls">
+                        <select id="sortSelect" class="sort-select">
+                            <option value="title">Sort by Title</option>
+                            <option value="date">Sort by Date</option>
+                            <option value="category">Sort by Category</option>
+                            <option value="difficulty">Sort by Difficulty</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="article-list" id="articleList">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Article View -->
+            <div class="wiki-view hidden" id="articleView">
+                <div class="article-wrapper">
+                    <article class="wiki-article" id="articleContent">
+                        <!-- Populated by JS -->
+                    </article>
+                    <aside class="article-sidebar" id="articleSidebar">
+                        <!-- Table of Contents and metadata -->
+                    </aside>
+                </div>
+            </div>
+
+            <!-- Graph View -->
+            <div class="wiki-view hidden" id="graphView">
+                <div class="graph-header">
+                    <h2><i class="fas fa-project-diagram"></i> Knowledge Graph</h2>
+                    <p>Interactive visualization of article connections and backlinks</p>
+                </div>
+                <div class="graph-container" id="graphContainer">
+                    <canvas id="graphCanvas"></canvas>
+                </div>
+                <div class="graph-legend" id="graphLegend"></div>
+            </div>
+
+            <!-- Recent View -->
+            <div class="wiki-view hidden" id="recentView">
+                <div class="list-header">
+                    <h2><i class="fas fa-clock"></i> Recently Updated</h2>
+                </div>
+                <div class="article-list" id="recentList">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Mobile overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <script src="js/wiki.js"></script>
+</body>
+</html>

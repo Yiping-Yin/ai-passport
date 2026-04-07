@@ -1,0 +1,408 @@
+/* Responsive Design */
+
+/* Tablets and smaller devices */
+@media (max-width: 768px) {
+    /* Navigation */
+    .nav-menu {
+        position: fixed;
+        left: -100%;
+        top: 70px;
+        flex-direction: column;
+        background-color: var(--bg-primary);
+        width: 100%;
+        text-align: center;
+        transition: 0.3s;
+        box-shadow: var(--shadow-lg);
+        padding: 2rem 0;
+    }
+
+    .nav-menu.active {
+        left: 0;
+    }
+
+    .hamburger {
+        display: flex;
+    }
+
+    .hamburger.active span:nth-child(2) {
+        opacity: 0;
+    }
+
+    .hamburger.active span:nth-child(1) {
+        transform: translateY(8px) rotate(45deg);
+    }
+
+    .hamburger.active span:nth-child(3) {
+        transform: translateY(-8px) rotate(-45deg);
+    }
+
+    /* Hero Section */
+    .hero-container {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 2rem;
+    }
+
+    .hero-title {
+        font-size: 2.5rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1.1rem;
+    }
+
+    .hero-buttons {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .ai-animation {
+        width: 200px;
+        height: 200px;
+    }
+
+    /* Content Grid */
+    .content-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    /* Learning Path */
+    .learning-path {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .path-step {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .step-number {
+        margin-right: 0;
+        margin-bottom: 1rem;
+    }
+
+    /* Timeline */
+    .timeline::before {
+        left: 40px;
+        transform: none;
+    }
+    
+    .timeline-item {
+        flex-direction: row !important;
+        justify-content: flex-start;
+        margin-left: 20px;
+    }
+    
+    .timeline-year {
+        position: absolute;
+        left: 0;
+        z-index: 3;
+    }
+    
+    .timeline-content {
+        margin-left: 100px;
+        margin-right: 0;
+    }
+
+    /* Examples Grid */
+    .examples-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .demo-container {
+        padding: 1rem;
+    }
+
+    /* Chat Interface */
+    .chat-interface {
+        height: 250px;
+    }
+
+    .chat-input {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .chat-input input {
+        width: 100%;
+    }
+
+    /* Resources Grid */
+    .resources-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    /* Footer */
+    .footer-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 2rem;
+    }
+
+    .social-links {
+        justify-content: center;
+    }
+
+    /* General adjustments */
+    .section {
+        padding: 60px 0;
+    }
+
+    .section-title {
+        font-size: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .container {
+        padding: 0 1rem;
+    }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+    /* Navigation */
+    .nav-logo {
+        font-size: 1.2rem;
+    }
+
+    .nav-logo i {
+        font-size: 1.5rem;
+    }
+
+    /* Hero Section */
+    .hero {
+        padding: 100px 0 60px;
+    }
+
+    .hero-title {
+        font-size: 2rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+
+    .hero-buttons {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .btn {
+        width: 100%;
+        max-width: 250px;
+    }
+
+    /* Content Cards */
+    .content-card {
+        padding: 1.5rem;
+    }
+
+    .card-icon {
+        width: 60px;
+        height: 60px;
+    }
+
+    .card-icon i {
+        font-size: 1.5rem;
+    }
+
+    /* Learning Path */
+    .path-step {
+        padding: 1rem;
+    }
+
+    .step-number {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    /* Examples */
+    .example-card {
+        padding: 1.5rem;
+    }
+
+    /* Quiz */
+    .quiz-card {
+        padding: 1.5rem;
+    }
+
+    .quiz-option {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+
+    /* Resources */
+    .resource-card {
+        padding: 1.5rem;
+    }
+
+    .resource-icon {
+        width: 50px;
+        height: 50px;
+    }
+
+    .resource-icon i {
+        font-size: 1.2rem;
+    }
+
+    /* Footer */
+    .footer {
+        padding: 2rem 0 1rem;
+    }
+
+    .footer-content {
+        gap: 1.5rem;
+    }
+
+    .footer-section h3 {
+        font-size: 1.1rem;
+    }
+}
+
+/* Large screens */
+@media (min-width: 1400px) {
+    .container {
+        max-width: 1400px;
+    }
+
+    .hero-container {
+        max-width: 1400px;
+    }
+
+    .nav-container {
+        max-width: 1400px;
+    }
+
+    .hero-title {
+        font-size: 4rem;
+    }
+
+    .section-title {
+        font-size: 3rem;
+    }
+}
+
+/* Extra small devices */
+@media (max-width: 320px) {
+    .hero-title {
+        font-size: 1.8rem;
+    }
+
+    .hero-subtitle {
+        font-size: 0.9rem;
+    }
+
+    .section-title {
+        font-size: 1.8rem;
+    }
+
+    .content-card {
+        padding: 1rem;
+    }
+
+    .example-card {
+        padding: 1rem;
+    }
+
+    .quiz-card {
+        padding: 1rem;
+    }
+
+    .resource-card {
+        padding: 1rem;
+    }
+}
+
+/* Landscape orientation for mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+    .hero {
+        padding: 100px 0 40px;
+    }
+
+    .hero-container {
+        gap: 2rem;
+    }
+
+    .hero-title {
+        font-size: 2rem;
+    }
+
+    .ai-animation {
+        width: 150px;
+        height: 150px;
+    }
+
+    .section {
+        padding: 40px 0;
+    }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .card-icon,
+    .resource-icon,
+    .step-number {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+    }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    html {
+        scroll-behavior: auto;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --text-primary: #f9fafb;
+        --text-secondary: #d1d5db;
+        --bg-primary: #1f2937;
+        --bg-secondary: #111827;
+        --bg-dark: #0f172a;
+        --border-color: #374151;
+    }
+    
+    .navbar {
+        background: rgba(31, 41, 55, 0.95);
+    }
+    
+    .content-card,
+    .example-card,
+    .quiz-card,
+    .resource-card {
+        background: var(--bg-dark);
+        color: var(--text-primary);
+    }
+    
+    .chat-input input,
+    .task-planner input {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        border-color: var(--border-color);
+    }
+    
+    .chat-messages {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+    }
+    
+    .bot-message {
+        background: var(--bg-dark);
+        color: var(--text-primary);
+    }
+}

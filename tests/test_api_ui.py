@@ -120,6 +120,27 @@ class ApiAndUiTests(unittest.TestCase):
         self.assertEqual(status, "200 OK")
         self.assertIn("Legacy Passport Views", legacy)
 
+    def test_web_frontend_routes_and_context_resolve_workspace(self) -> None:
+        status, headers, _ = self._call_response(self.app, "GET", "/", query=f"workspace_id={self.workspace_id}")
+        self.assertEqual(status, "302 Found")
+        self.assertEqual(headers["Location"], f"/web/index.html?workspace_id={self.workspace_id}")
+
+        status, headers, _ = self._call_response(self.app, "GET", "/wiki", query=f"workspace_id={self.workspace_id}")
+        self.assertEqual(status, "302 Found")
+        self.assertEqual(headers["Location"], f"/web/wiki.html?workspace_id={self.workspace_id}")
+
+        status, context = self._call_json("GET", "/web/api/site_context", query=f"workspace_id={self.workspace_id}")
+        self.assertEqual(status, "200 OK")
+        self.assertEqual(context["workspace_id"], self.workspace_id)
+        self.assertEqual(context["workspace_title"], "UI Workspace")
+        self.assertGreaterEqual(context["page_count"], 1)
+
+        status, articles = self._call_json("GET", "/web/tables/wiki_articles", query=f"workspace_id={self.workspace_id}")
+        self.assertEqual(status, "200 OK")
+        self.assertTrue(articles["data"])
+        self.assertTrue(any(item["category"] == "Reference" for item in articles["data"]))
+        self.assertTrue(any(item["kind"] == "topic" for item in articles["data"]))
+
     def test_ui_pages_render_expected_sections(self) -> None:
         for path, text in (
             ("/home", "Wiki Home"),
@@ -154,21 +175,23 @@ class ApiAndUiTests(unittest.TestCase):
             body,
         )
 
+    def _call_response(self, app: Application | None = None, method: str = "GET", path: str = "/", body: bytes = b"", *, query: str = "") -> tuple[str, dict[str, str], bytes]:
+        status_holder: list[str] = []
+        header_holder: dict[str, str] = {}
+
+        def start_response(status, headers):
+            status_holder.append(status)
+            header_holder.update(dict(headers))
+
+        target = app or self.app
+        response = b"".join(target(make_testing_environ(method, path, body=body, query=query), start_response))
+        return status_holder[0], header_holder, response
+
     def _call_json(self, method: str, path: str, payload: dict[str, object] | None = None, *, query: str = "") -> tuple[str, dict[str, object]]:
         body = json.dumps(payload).encode("utf-8") if payload is not None else b""
-        status_holder: list[str] = []
-
-        def start_response(status, headers):
-            status_holder.append(status)
-
-        response = b"".join(self.app(make_testing_environ(method, path, body=body, query=query), start_response))
-        return status_holder[0], json.loads(response.decode("utf-8"))
+        status, _, response = self._call_response(method=method, path=path, body=body, query=query)
+        return status, json.loads(response.decode("utf-8"))
 
     def _call_html(self, app: Application, path: str, *, query: str = "") -> tuple[str, str]:
-        status_holder: list[str] = []
-
-        def start_response(status, headers):
-            status_holder.append(status)
-
-        response = b"".join(app(make_testing_environ("GET", path, query=query), start_response))
-        return status_holder[0], response.decode("utf-8")
+        status, _, response = self._call_response(app=app, method="GET", path=path, query=query)
+        return status, response.decode("utf-8")
