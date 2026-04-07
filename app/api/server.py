@@ -251,6 +251,9 @@ class Application:
             elif path.startswith("/api/"):
                 status, headers, body = self._handle_api(method, path, query, environ)
             else:
+                redirect = self._legacy_ui_redirect(path, query)
+                if redirect is not None:
+                    return self._redirect(redirect, start_response)
                 status, headers, body = self._handle_ui(method, path, query, environ)
         except AuthorizationError as exc:
             status, headers, body = self._json_response(403, {"error": str(exc)})
@@ -450,6 +453,8 @@ class Application:
         relative = path[len("/web/"):]
         if method == "POST" and relative == "api/rescan":
             return self._rescan_response(query, environ)
+        if method == "POST" and relative == "api/connect":
+            return self._connect_response(query, environ)
         if method != "GET":
             return self._json_response(405, {"error": "method not allowed"})
         if relative == "api/site_context":
@@ -502,6 +507,8 @@ class Application:
             reverse=True,
         )[:6]
         recent = sorted(pages, key=lambda page: page.get("updated_at") or "", reverse=True)[:8]
+        featured = [{**page, "title": self._prettify_title(page.get("title") or page.get("path") or "")} for page in featured]
+        recent = [{**page, "title": self._prettify_title(page.get("title") or page.get("path") or "")} for page in recent]
         payload.update(
             {
                 "workspace_id": workspace_id,
@@ -520,6 +527,39 @@ class Application:
             }
         )
         return self._json_response(200, payload)
+
+    def _connect_response(self, query: dict[str, list[str]], environ: dict[str, object]) -> tuple[str, list[tuple[str, str]], bytes]:
+        try:
+            data = _read_json(environ)
+        except Exception:
+            return self._json_response(400, {"error": "invalid JSON body"})
+        source_root = (data.get("source_root") or "").strip()
+        if not source_root:
+            return self._json_response(400, {"error": "source_root is required"})
+        if not Path(source_root).expanduser().is_dir():
+            return self._json_response(400, {"error": f"folder not found: {source_root}"})
+        workspace_id = self._workspace_id_from_query(query)
+        if not workspace_id:
+            workspace = self.ctx.workspace_service.create_workspace(
+                workspace_type=WorkspaceType.PERSONAL,
+                title=Path(source_root).name or "Workspace",
+                now=utc_now(),
+            )
+            workspace_id = workspace.id
+        try:
+            self.ctx.wiki_service.update_vault(
+                workspace_id,
+                source_root=str(Path(source_root).expanduser()),
+                ai_enabled=False,
+            )
+            result = self.ctx.wiki_service.scan_and_build(workspace_id)
+        except Exception as exc:
+            return self._json_response(500, {"error": str(exc)})
+        return self._json_response(200, {
+            "workspace_id": workspace_id,
+            "source_root": str(Path(source_root).expanduser()),
+            "scanned_file_count": getattr(result, "scanned_file_count", None),
+        })
 
     def _rescan_response(self, query: dict[str, list[str]], environ: dict[str, object]) -> tuple[str, list[tuple[str, str]], bytes]:
         workspace_id = self._workspace_id_from_query(query)
@@ -566,7 +606,7 @@ class Application:
                 articles.append({
                     "id": rel_path,
                     "path": rel_path,
-                    "title": page.get("title") or rel_path,
+                    "title": self._prettify_title(page.get("title") or rel_path),
                     "slug": slug_by_path[rel_path],
                     "summary": page.get("summary") or "",
                     "content": content,
@@ -592,10 +632,74 @@ class Application:
             return f"/web/{filename}"
         return f"/web/{filename}?{urlencode({'workspace_id': workspace_id})}"
 
+    def _legacy_ui_redirect(self, path: str, query: dict[str, list[str]]) -> str | None:
+        index_paths = {
+            "/home",
+            "/dashboard",
+            "/inbox",
+            "/passport",
+            "/mount",
+            "/review",
+            "/settings",
+            "/legacy",
+            "/legacy/knowledge",
+            "/legacy/passport",
+            "/legacy/mount",
+            "/legacy/review",
+            "/legacy/settings",
+        }
+        wiki_paths = {
+            "/sources",
+            "/topics",
+            "/projects",
+            "/methods",
+            "/questions",
+            "/search",
+        }
+        if path in index_paths:
+            return self._web_entry_url("index.html", query)
+        if path in wiki_paths:
+            forwarded: dict[str, str] = {}
+            workspace_id = self._workspace_id_from_query(query)
+            if workspace_id:
+                forwarded["workspace_id"] = workspace_id
+            page = _single(query, "page", default="")
+            q = _single(query, "q", default="")
+            if page:
+                forwarded["page"] = page
+            if q:
+                forwarded["q"] = q
+            if not forwarded:
+                return "/web/wiki.html"
+            return f"/web/wiki.html?{urlencode(forwarded)}"
+        return None
+
     @staticmethod
     def _slugify(text: str) -> str:
         slug = __import__("re").sub(r"[^a-zA-Z0-9]+", "-", text.strip().lower()).strip("-")
         return slug or "untitled"
+
+    _TITLE_LOWER = {"a", "an", "and", "as", "at", "but", "by", "for", "from", "in", "of", "on", "or", "the", "to", "vs", "with"}
+
+    @classmethod
+    def _prettify_title(cls, raw: str) -> str:
+        import re as _re
+        text = str(raw or "").rsplit("/", 1)[-1]
+        text = _re.sub(r"\.(md|txt|pdf|markdown)$", "", text, flags=_re.IGNORECASE)
+        text = text.replace("_", " ").replace("-", " ").strip()
+        if not text:
+            return "Untitled"
+        words = text.split()
+        out = []
+        for i, w in enumerate(words):
+            wl = w.lower()
+            if 0 < i < len(words) - 1 and wl in cls._TITLE_LOWER:
+                out.append(wl)
+            elif w.isupper() and 2 <= len(w) <= 4:
+                out.append(w)
+            else:
+                out.append(wl[:1].upper() + wl[1:])
+        return " ".join(out)
 
     def _handle_ui(
         self,

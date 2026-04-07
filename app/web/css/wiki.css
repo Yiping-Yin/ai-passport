@@ -1490,3 +1490,8 @@ body {
 .workspace-status { font-size: 0.75rem; color: var(--text-secondary); margin: 0; min-height: 1em; }
 .workspace-status.success { color: #10b981; }
 .workspace-status.error { color: #ef4444; }
+
+.workspace-input { width: 100%; padding: 0.5rem 0.7rem; border: 1px solid var(--border, #e5e7eb); border-radius: 8px; font-size: 0.8rem; background: var(--bg-primary, #fff); color: var(--text-primary, #111); }
+.workspace-input:focus { outline: none; border-color: var(--primary, #6366f1); }
+.workspace-btn-secondary { background: transparent; color: var(--primary, #6366f1); border: 1px solid var(--primary, #6366f1); }
+.workspace-btn-secondary:hover { background: var(--primary, #6366f1); color: white; }

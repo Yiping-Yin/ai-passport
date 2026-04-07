@@ -69,10 +69,9 @@ class ApiAndUiTests(unittest.TestCase):
             )
             try:
                 app = Application(context)
-                status, body = self._call_html(app, "/home")
-                self.assertEqual(status, "200 OK")
-                self.assertIn("Create Your Personal Knowledge Wiki", body)
-                self.assertIn("Create Workspace", body)
+                status, headers, _ = self._call_response(app=app, method="GET", path="/home")
+                self.assertEqual(status, "302 Found")
+                self.assertEqual(headers["Location"], "/web/index.html")
             finally:
                 context.connection.close()
         finally:
@@ -116,9 +115,9 @@ class ApiAndUiTests(unittest.TestCase):
         self.assertEqual(status, "200 OK")
         self.assertFalse(stopped["running"])
 
-        status, legacy = self._call_html(self.app, "/legacy", query=f"workspace_id={self.workspace_id}")
-        self.assertEqual(status, "200 OK")
-        self.assertIn("Legacy Passport Views", legacy)
+        status, headers, _ = self._call_response(method="GET", path="/legacy", query=f"workspace_id={self.workspace_id}")
+        self.assertEqual(status, "302 Found")
+        self.assertEqual(headers["Location"], f"/web/index.html?workspace_id={self.workspace_id}")
 
     def test_web_frontend_routes_and_context_resolve_workspace(self) -> None:
         status, headers, _ = self._call_response(self.app, "GET", "/", query=f"workspace_id={self.workspace_id}")
@@ -141,39 +140,51 @@ class ApiAndUiTests(unittest.TestCase):
         self.assertTrue(any(item["category"] == "Reference" for item in articles["data"]))
         self.assertTrue(any(item["kind"] == "topic" for item in articles["data"]))
 
-    def test_ui_pages_render_expected_sections(self) -> None:
-        for path, text in (
-            ("/home", "Wiki Home"),
-            ("/sources", "Sources"),
-            ("/topics", "Topics"),
-            ("/projects", "Projects"),
-            ("/methods", "Methods"),
-            ("/questions", "Questions"),
-            ("/search", "Search Wiki"),
-            ("/settings", "Wiki Settings"),
-        ):
-            status, body = self._call_html(self.app, path, query=f"workspace_id={self.workspace_id}")
-            self.assertEqual(status, "200 OK")
-            self.assertIn(text, body)
-        status, body = self._call_html(self.app, "/home", query=f"workspace_id={self.workspace_id}")
-        self.assertIn("Recently Updated", body)
-        self.assertIn("Popular Tags", body)
+    def test_old_ui_routes_redirect_to_web_frontend(self) -> None:
+        redirects = {
+            "/home": f"/web/index.html?workspace_id={self.workspace_id}",
+            "/dashboard": f"/web/index.html?workspace_id={self.workspace_id}",
+            "/settings": f"/web/index.html?workspace_id={self.workspace_id}",
+            "/inbox": f"/web/index.html?workspace_id={self.workspace_id}",
+            "/sources": f"/web/wiki.html?workspace_id={self.workspace_id}",
+            "/topics": f"/web/wiki.html?workspace_id={self.workspace_id}",
+            "/projects": f"/web/wiki.html?workspace_id={self.workspace_id}",
+            "/methods": f"/web/wiki.html?workspace_id={self.workspace_id}",
+            "/questions": f"/web/wiki.html?workspace_id={self.workspace_id}",
+        }
+        for path, expected in redirects.items():
+            status, headers, _ = self._call_response(method="GET", path=path, query=f"workspace_id={self.workspace_id}")
+            self.assertEqual(status, "302 Found")
+            self.assertEqual(headers["Location"], expected)
 
-    def test_wiki_page_links_are_rewritten_to_app_routes(self) -> None:
-        status, body = self._call_html(
-            self.app,
-            "/methods",
+        status, headers, _ = self._call_response(
+            method="GET",
+            path="/search",
+            query=f"workspace_id={self.workspace_id}&q=python",
+        )
+        self.assertEqual(status, "302 Found")
+        self.assertEqual(headers["Location"], f"/web/wiki.html?workspace_id={self.workspace_id}&q=python")
+
+        status, headers, _ = self._call_response(
+            method="GET",
+            path="/methods",
             query=f"workspace_id={self.workspace_id}&page=methods/dataclass-serialization.md",
         )
+        self.assertEqual(status, "302 Found")
+        self.assertEqual(
+            headers["Location"],
+            f"/web/wiki.html?workspace_id={self.workspace_id}&page=methods%2Fdataclass-serialization.md",
+        )
+
+    def test_web_article_dataset_includes_resolved_links(self) -> None:
+        status, payload = self._call_json("GET", "/web/tables/wiki_articles", query=f"workspace_id={self.workspace_id}")
         self.assertEqual(status, "200 OK")
-        self.assertIn(
-            f"/topics?workspace_id={self.workspace_id}&amp;page=topics/python-typing.md",
-            body,
-        )
-        self.assertIn(
-            f"/sources?workspace_id={self.workspace_id}&amp;page=sources/typing.md",
-            body,
-        )
+        by_slug = {item["slug"]: item for item in payload["data"]}
+        method = by_slug["method-dataclass-serialization"]
+        topic = by_slug["topic-python-typing"]
+        source = by_slug["source-typing"]
+        self.assertIn(topic["slug"], method["links_to"])
+        self.assertIn(source["slug"], method["links_to"])
 
     def _call_response(self, app: Application | None = None, method: str = "GET", path: str = "/", body: bytes = b"", *, query: str = "") -> tuple[str, dict[str, str], bytes]:
         status_holder: list[str] = []

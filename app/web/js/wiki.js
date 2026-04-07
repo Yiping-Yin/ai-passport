@@ -37,11 +37,21 @@
         buildSidebar();
         renderHomeView();
         bindEvents();
-        handleHashNavigation();
+        if (!handleHashNavigation()) {
+            handleQueryNavigation();
+        }
     }
 
     function getWorkspaceId() {
         return new URLSearchParams(window.location.search).get('workspace_id') || '';
+    }
+
+    function getPageQuery() {
+        return new URLSearchParams(window.location.search).get('page') || '';
+    }
+
+    function getSearchQuery() {
+        return new URLSearchParams(window.location.search).get('q') || '';
     }
 
     function withWorkspace(path) {
@@ -173,6 +183,13 @@
         closeMobileSidebar();
     }
 
+    function openArticleByPath(path) {
+        const article = state.articles.find(a => a.path === path);
+        if (article) {
+            openArticle(article.slug);
+        }
+    }
+
     // ====== HOME VIEW ======
     function renderHomeView() {
         // Stats
@@ -254,6 +271,19 @@
             });
         }
         showView('list');
+    }
+
+    function renderSearchResultsPage(query) {
+        const q = (query || '').toLowerCase().trim();
+        const matches = state.articles.filter(a => {
+            return (a.title || '').toLowerCase().includes(q) ||
+                   (a.summary || '').toLowerCase().includes(q) ||
+                   (a.content || '').toLowerCase().includes(q) ||
+                   parseArray(a.tags).some(t => t.toLowerCase().includes(q));
+        });
+        renderArticleList(matches, `Search: ${query}`);
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) searchInput.value = query;
     }
 
     function createArticleListItem(article) {
@@ -798,6 +828,40 @@
             const src = state.siteContext && state.siteContext.source_root;
             sourceEl.textContent = src || 'No source folder connected';
         }
+        const sourceInput = document.getElementById('sourceRootInput');
+        if (sourceInput && state.siteContext && state.siteContext.source_root) {
+            sourceInput.value = state.siteContext.source_root;
+        }
+        const connectBtn = document.getElementById('connectFolderBtn');
+        if (connectBtn) {
+            connectBtn.addEventListener('click', async () => {
+                const status = document.getElementById('rescanStatus');
+                const path = (sourceInput.value || '').trim();
+                if (!path) { status.className = 'workspace-status error'; status.textContent = 'Enter a folder path'; return; }
+                connectBtn.disabled = true;
+                status.className = 'workspace-status';
+                status.textContent = 'Connecting & scanning…';
+                try {
+                    const url = state.workspaceId
+                        ? `api/connect?workspace_id=${encodeURIComponent(state.workspaceId)}`
+                        : 'api/connect';
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ source_root: path }),
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || 'Connect failed');
+                    status.className = 'workspace-status success';
+                    status.textContent = `Connected · scanned ${data.scanned_file_count ?? '?'} files`;
+                    setTimeout(() => window.location.reload(), 800);
+                } catch (e) {
+                    status.className = 'workspace-status error';
+                    status.textContent = e.message;
+                    connectBtn.disabled = false;
+                }
+            });
+        }
         const rescanBtn = document.getElementById('rescanBtn');
         if (rescanBtn) {
             rescanBtn.addEventListener('click', async () => {
@@ -987,7 +1051,7 @@
     // ====== HASH NAVIGATION ======
     function handleHashNavigation() {
         const hash = window.location.hash.slice(1);
-        if (!hash) return;
+        if (!hash) return false;
 
         const parts = hash.split('/');
         const type = parts[0];
@@ -995,18 +1059,38 @@
 
         if (type === 'article' && value) {
             openArticle(value);
+            return true;
         } else if (type === 'category' && value) {
             filterByCategory(value);
+            return true;
         } else if (type === 'tag' && value) {
             filterByTag(value);
+            return true;
         } else if (type === 'difficulty' && value) {
             filterByDifficulty(value);
+            return true;
         } else if (type === 'all') {
             renderArticleList(state.articles, 'All Articles');
+            return true;
         } else if (type === 'graph') {
             renderGraphView();
+            return true;
         } else if (type === 'recent') {
             renderRecentView();
+            return true;
+        }
+        return false;
+    }
+
+    function handleQueryNavigation() {
+        const page = getPageQuery();
+        const q = getSearchQuery();
+        if (page) {
+            openArticleByPath(page);
+            return;
+        }
+        if (q) {
+            renderSearchResultsPage(q);
         }
     }
 
