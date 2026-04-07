@@ -840,7 +840,8 @@
                 if (!path) { status.className = 'workspace-status error'; status.textContent = 'Enter a folder path'; return; }
                 connectBtn.disabled = true;
                 status.className = 'workspace-status';
-                status.textContent = 'Connecting & scanning…';
+                status.textContent = 'Connecting & scanning… this can take a moment';
+                document.getElementById('workspaceProgress').classList.add('active');
                 try {
                     const url = state.workspaceId
                         ? `api/connect?workspace_id=${encodeURIComponent(state.workspaceId)}`
@@ -859,6 +860,7 @@
                     status.className = 'workspace-status error';
                     status.textContent = e.message;
                     connectBtn.disabled = false;
+                    document.getElementById('workspaceProgress').classList.remove('active');
                 }
             });
         }
@@ -868,7 +870,8 @@
                 const status = document.getElementById('rescanStatus');
                 rescanBtn.disabled = true;
                 status.className = 'workspace-status';
-                status.textContent = 'Scanning…';
+                status.textContent = 'Scanning… this can take a moment';
+                document.getElementById('workspaceProgress').classList.add('active');
                 try {
                     const url = state.workspaceId
                         ? `api/rescan?workspace_id=${encodeURIComponent(state.workspaceId)}`
@@ -883,6 +886,7 @@
                     status.className = 'workspace-status error';
                     status.textContent = e.message;
                     rescanBtn.disabled = false;
+                    document.getElementById('workspaceProgress').classList.remove('active');
                 }
             });
         }

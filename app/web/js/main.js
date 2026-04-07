@@ -94,9 +94,7 @@ function applyWorkspaceLinks(workspaceId) {
     const suffix = workspaceId ? `?workspace_id=${encodeURIComponent(workspaceId)}` : '';
     document.getElementById('wikiNavLink').href = `wiki.html${suffix}`;
     document.getElementById('openWikiButton').href = `wiki.html${suffix}`;
-    document.getElementById('legacyButton').href = `/home${suffix}`;
     document.getElementById('footerWikiLink').href = `wiki.html${suffix}`;
-    document.getElementById('footerLegacyLink').href = `/home${suffix}`;
 }
 
 function renderHome(context) {

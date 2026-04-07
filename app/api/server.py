@@ -685,8 +685,11 @@ class Application:
     def _prettify_title(cls, raw: str) -> str:
         import re as _re
         text = str(raw or "").rsplit("/", 1)[-1]
-        text = _re.sub(r"\.(md|txt|pdf|markdown)$", "", text, flags=_re.IGNORECASE)
+        text = _re.sub(r"\.(md|txt|pdf|markdown|docx|pptx)$", "", text, flags=_re.IGNORECASE)
         text = text.replace("_", " ").replace("-", " ").strip()
+        # Collapse leading numeric sequences like "1 2 3 4pp" or "01 "
+        text = _re.sub(r"^(?:\d+\s+){1,4}", "", text)
+        text = _re.sub(r"\s+", " ", text).strip()
         if not text:
             return "Untitled"
         words = text.split()
@@ -695,11 +698,14 @@ class Application:
             wl = w.lower()
             if 0 < i < len(words) - 1 and wl in cls._TITLE_LOWER:
                 out.append(wl)
-            elif w.isupper() and 2 <= len(w) <= 4:
+            elif w.isupper() and 2 <= len(w) <= 5:
                 out.append(w)
             else:
                 out.append(wl[:1].upper() + wl[1:])
-        return " ".join(out)
+        result = " ".join(out)
+        if len(result) > 80:
+            result = result[:77].rstrip() + "…"
+        return result
 
     def _handle_ui(
         self,

@@ -1495,3 +1495,9 @@ body {
 .workspace-input:focus { outline: none; border-color: var(--primary, #6366f1); }
 .workspace-btn-secondary { background: transparent; color: var(--primary, #6366f1); border: 1px solid var(--primary, #6366f1); }
 .workspace-btn-secondary:hover { background: var(--primary, #6366f1); color: white; }
+
+/* Indeterminate progress bar for workspace actions */
+.workspace-progress { position: relative; height: 4px; width: 100%; background: rgba(99, 102, 241, 0.15); border-radius: 999px; overflow: hidden; display: none; }
+.workspace-progress.active { display: block; }
+.workspace-progress::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, var(--primary, #6366f1), transparent); width: 40%; animation: workspaceSlide 1.2s ease-in-out infinite; border-radius: 999px; }
+@keyframes workspaceSlide { 0% { transform: translateX(-100%); } 100% { transform: translateX(250%); } }

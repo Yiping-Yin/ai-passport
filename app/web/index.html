@@ -42,18 +42,45 @@
                 <p class="hero-subtitle" id="heroSubtitle">Scan a local folder, turn it into structured Markdown, and browse it through a polished web reader.</p>
                 <div class="hero-buttons">
                     <a class="btn btn-primary" id="openWikiButton" href="wiki.html">Open Wiki</a>
-                    <a class="btn btn-secondary" id="legacyButton" href="/home">Legacy Browser</a>
                 </div>
                 <p id="heroMeta" class="hero-meta"></p>
             </div>
             <div class="hero-visual">
-                <div class="ai-animation">
-                    <div class="neural-network">
-                        <div class="node"></div>
-                        <div class="node"></div>
-                        <div class="node"></div>
-                        <div class="connection"></div>
-                    </div>
+                <div class="knowledge-graph" aria-hidden="true">
+                    <svg viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <radialGradient id="kgNodeGrad" cx="50%" cy="50%" r="50%">
+                                <stop offset="0%" stop-color="#a5b4fc" stop-opacity="1"/>
+                                <stop offset="100%" stop-color="#6366f1" stop-opacity="1"/>
+                            </radialGradient>
+                            <linearGradient id="kgEdgeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#6366f1" stop-opacity="0.15"/>
+                                <stop offset="50%" stop-color="#6366f1" stop-opacity="0.6"/>
+                                <stop offset="100%" stop-color="#6366f1" stop-opacity="0.15"/>
+                            </linearGradient>
+                        </defs>
+                        <g class="kg-edges" stroke="url(#kgEdgeGrad)" stroke-width="1.5" fill="none">
+                            <line x1="160" y1="160" x2="60" y2="80"/>
+                            <line x1="160" y1="160" x2="260" y2="70"/>
+                            <line x1="160" y1="160" x2="50" y2="220"/>
+                            <line x1="160" y1="160" x2="270" y2="230"/>
+                            <line x1="160" y1="160" x2="160" y2="40"/>
+                            <line x1="160" y1="160" x2="160" y2="280"/>
+                            <line x1="60" y1="80" x2="160" y2="40"/>
+                            <line x1="260" y1="70" x2="160" y2="40"/>
+                            <line x1="50" y1="220" x2="160" y2="280"/>
+                            <line x1="270" y1="230" x2="160" y2="280"/>
+                        </g>
+                        <g class="kg-nodes" fill="url(#kgNodeGrad)">
+                            <circle cx="160" cy="160" r="14" class="kg-core"/>
+                            <circle cx="160" cy="40"  r="9"/>
+                            <circle cx="60"  cy="80"  r="9"/>
+                            <circle cx="260" cy="70"  r="9"/>
+                            <circle cx="50"  cy="220" r="9"/>
+                            <circle cx="270" cy="230" r="9"/>
+                            <circle cx="160" cy="280" r="9"/>
+                        </g>
+                    </svg>
                 </div>
             </div>
         </div>
@@ -337,7 +364,6 @@
                         <li><a href="#overview">Overview</a></li>
                         <li><a href="#categories">Categories</a></li>
                         <li><a id="footerWikiLink" href="wiki.html">Open Wiki</a></li>
-                        <li><a id="footerLegacyLink" href="/home">Legacy Browser</a></li>
                     </ul>
                 </div>
                 <div class="footer-section">
